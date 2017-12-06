@@ -39,7 +39,7 @@ string TreeHasher::HashChildren(const string& left_child,
                                 const string& right_child) const {
   lock_guard<mutex> lock(lock_);
   hasher_->Reset();
-  hasher_->Update(string(1, kNodePrefix));
+  // hasher_->Update(string(1, kNodePrefix));
   hasher_->Update(left_child);
   hasher_->Update(right_child);
   return hasher_->Final();
