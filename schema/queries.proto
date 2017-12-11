@@ -49,8 +49,8 @@ message Query {
        GetAccountAssetTransactions get_account_asset_transactions = 6;
        GetAccountAssets get_account_assets = 7;
        GetRoles get_roles = 8;
-       GetAssetInfo get_asset_info = 9;
-       GetRolePermissions get_role_permissions = 10;
+       GetRolePermissions get_role_permissions = 9;
+       GetAssetInfo get_asset_info = 10;
      }
      // used to prevent replay attacks.
      uint64 query_counter = 11;
