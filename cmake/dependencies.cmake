@@ -91,4 +91,7 @@ if(BENCHMARKING)
   find_package(benchmark)
 endif()
 
-
+##########################
+#       merkletree       #
+##########################
+find_package(merkletree)
