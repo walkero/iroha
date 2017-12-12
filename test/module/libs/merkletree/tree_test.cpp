@@ -17,14 +17,16 @@
 
 #include <gtest/gtest.h>
 #include "merkletree/merkle_tree.h"
-#include "merkletree/sha3_256hasher.cpp"
+#include "cryptography/ed25519_sha3_impl/internal/sha3_hash.hpp"
+#include "merkletree/generic_hasher.hpp"
 
-using iroha::OneHasher;
+using iroha::GenericHasher;
+using iroha::sha3_256;
 
 TEST(MerkleTree, root_of_same_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
@@ -35,7 +37,7 @@ TEST(MerkleTree, root_of_same_sequence) {
   std::vector<std::string> sequence2{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
   // Create another tree
-  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
@@ -47,7 +49,7 @@ TEST(MerkleTree, root_of_same_sequence) {
 TEST(MerkleTree, root_of_different_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
@@ -58,7 +60,7 @@ TEST(MerkleTree, root_of_different_sequence) {
   std::vector<std::string> sequence2{
       "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
   // Create another tree
-  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
@@ -70,7 +72,7 @@ TEST(MerkleTree, root_of_different_sequence) {
 TEST(MerkleTree, root_of_shuffled_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
@@ -81,7 +83,7 @@ TEST(MerkleTree, root_of_shuffled_sequence) {
   std::vector<std::string> sequence2{
       "quick", "The", "lazy", "dog", "over", "the", "brown", "fox", "jumps"};
   // Create another tree
-  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new GenericHasher(sha3_256)};
   merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
