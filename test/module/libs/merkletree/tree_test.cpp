@@ -24,8 +24,8 @@ using iroha::OneHasher;
 TEST(MerkleTree, root_of_same_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<SerialHasher> hasher{new OneHasher()};
-  MerkleTree tree{std::move(hasher)};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
   }
@@ -35,20 +35,20 @@ TEST(MerkleTree, root_of_same_sequence) {
   std::vector<std::string> sequence2{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
   // Create another tree
-  std::unique_ptr<SerialHasher> hasher2{new OneHasher()};
-  MerkleTree tree2{std::move(hasher2)};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
   }
   auto root2 = tree2.CurrentRoot();
-  ASSERT_EQ(root, root2);
+  EXPECT_EQ(root, root2);
 }
 
 TEST(MerkleTree, root_of_different_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<SerialHasher> hasher{new OneHasher()};
-  MerkleTree tree{std::move(hasher)};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
   }
@@ -58,20 +58,20 @@ TEST(MerkleTree, root_of_different_sequence) {
   std::vector<std::string> sequence2{
       "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
   // Create another tree
-  std::unique_ptr<SerialHasher> hasher2{new OneHasher()};
-  MerkleTree tree2{std::move(hasher2)};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
   }
   auto root2 = tree2.CurrentRoot();
-  ASSERT_NE(root, root2);
+  EXPECT_NE(root, root2);
 }
 
 TEST(MerkleTree, root_of_shuffled_sequence) {
   std::vector<std::string> sequence{
       "The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"};
-  std::unique_ptr<SerialHasher> hasher{new OneHasher()};
-  MerkleTree tree{std::move(hasher)};
+  std::unique_ptr<merkletree::SerialHasher> hasher{new OneHasher()};
+  merkletree::MerkleTree tree{std::move(hasher)};
   for (auto &e : sequence) {
     tree.AddLeaf(e);
   }
@@ -81,11 +81,11 @@ TEST(MerkleTree, root_of_shuffled_sequence) {
   std::vector<std::string> sequence2{
       "quick", "The", "lazy", "dog", "over", "the", "brown", "fox", "jumps"};
   // Create another tree
-  std::unique_ptr<SerialHasher> hasher2{new OneHasher()};
-  MerkleTree tree2{std::move(hasher2)};
+  std::unique_ptr<merkletree::SerialHasher> hasher2{new OneHasher()};
+  merkletree::MerkleTree tree2{std::move(hasher2)};
   for (auto &e : sequence2) {
     tree2.AddLeaf(e);
   }
   auto root2 = tree2.CurrentRoot();
-  ASSERT_NE(root, root2);
+  EXPECT_NE(root, root2);
 }

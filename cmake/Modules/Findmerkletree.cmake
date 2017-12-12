@@ -12,7 +12,7 @@ find_package_handle_standard_args(merkletree DEFAULT_MSG
     )
 
 set(URL https://github.com/nickaleks/merkletree)
-set(VERSION c0ac6667ad0836ef467c27e2d8f883300832e2df)
+set(VERSION e147cc797db7217bb61b4a5f61a4bd2fe76818f0)
 set_target_description(merkletree "Merkle Tree implementation" ${URL} ${VERSION})
 
 

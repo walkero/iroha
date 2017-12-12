@@ -1,9 +1,9 @@
 #include "cryptography/ed25519_sha3_impl/internal/sha3_hash.hpp"
-#include "serial_hasher.h"
+#include "merkletree/serial_hasher.h"
 
 namespace iroha {
 
-  class OneHasher : public SerialHasher {
+  class OneHasher : public merkletree::SerialHasher {
    private:
     std::string hash_;
 
