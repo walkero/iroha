@@ -1,0 +1,16 @@
+{
+  "name": "irohajs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install": "cmake-js compile -m"
+  },
+  "author": "",
+  "license": "ISC",
+  "cmake-js": {
+    "runtime": "node",
+    "runtimeVersion": "6.12.2",
+    "arch": "x64"
+  }
+}
