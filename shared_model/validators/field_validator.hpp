@@ -69,7 +69,7 @@ namespace shared_model {
           ReasonsGroupType &reason,
           const interface::types::AssetIdCollectionType &assets_id) const {
         for (auto const& asset_id : assets_id) {
-          if (not std::regex_match(asset_id, asset_id_)) {
+          if (not std::regex_match(asset_id, asset_id_regex_)) {
             reason.second.push_back("Wrongly formed asset_id in assets_id");
             break;
           }
