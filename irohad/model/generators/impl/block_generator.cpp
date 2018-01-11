@@ -30,10 +30,9 @@ namespace iroha {
         block.created_ts = created_ts;
         block.height = 1;
         std::fill(block.prev_hash.begin(), block.prev_hash.end(), 0);
-        block.txs_number = 1;
         block.transactions = transactions;
+        block.txs_number = static_cast<uint16_t>(block.transactions.size());
         block.hash = hash(block);
-
         return block;
       }
 
