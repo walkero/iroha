@@ -43,19 +43,14 @@ namespace iroha {
 
       protocol::Pager serializePager(const model::Pager &pager) {
         protocol::Pager pb_pager;
-        pb_pager.set_tx_hash(pager.tx_hash.to_hexstring());
+        pb_pager.set_tx_hash(pager.tx_hash.to_string());
         pb_pager.set_limit(pager.limit);
         return pb_pager;
       }
 
       model::Pager deserializePager(const protocol::Pager &pb_pager) {
         model::Pager pager;
-        if (const auto byte_tx_hash =
-          iroha::hexstringToBytestring(pb_pager.tx_hash())) {
-          pager.tx_hash.from_string(*byte_tx_hash);
-        } else {
-          pager.tx_hash.fill(0);
-        }
+        pager.tx_hash.from_string(pb_pager.tx_hash());
         pager.limit = static_cast<decltype(pager.limit)>(pb_pager.limit());
         return pager;
       }
