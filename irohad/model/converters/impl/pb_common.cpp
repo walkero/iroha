@@ -17,6 +17,7 @@
 
 #include "model/converters/pb_common.hpp"
 #include "byteutils.hpp"
+#include "common/types.hpp"
 #include "queries.pb.h"
 
 namespace iroha {
@@ -37,7 +38,10 @@ namespace iroha {
 
       iroha::Amount deserializeAmount(protocol::Amount pb_amount) {
         auto value = pb_amount.value();
-        return {value.first(), value.second(), value.third(), value.fourth(),
+        return {value.first(),
+                value.second(),
+                value.third(),
+                value.fourth(),
                 static_cast<uint8_t>(pb_amount.precision())};
       }
 
@@ -50,7 +54,8 @@ namespace iroha {
 
       model::Pager deserializePager(const protocol::Pager &pb_pager) {
         model::Pager pager;
-        pager.tx_hash.from_string(pb_pager.tx_hash());
+        pager.tx_hash = stringToBlob<hash256_t::size()>(pb_pager.tx_hash())
+                            .value_or(hash256_t{});
         pager.limit = static_cast<decltype(pager.limit)>(pb_pager.limit());
         return pager;
       }
