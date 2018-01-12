@@ -26,6 +26,7 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/irange.hpp>
 
+#include "common/types.hpp"
 #include "datetime/time.hpp"
 #include "primitive.pb.h"
 #include "queries.pb.h"
@@ -33,13 +34,6 @@
 class ValidatorsTest : public ::testing::Test {
  public:
   ValidatorsTest() {
-    assets_id.Add("usd#domain");
-    assets_id.Add("riel#domain");
-
-    pager.set_tx_hash(
-        std::string(256 / 8, 1));  // in case of sha3_256 hash
-    pager.set_limit(10);
-
     // Generate protobuf reflection setter for given type and value
     auto setField = [&](auto setter) {
       return [setter](const auto &value) {
@@ -182,7 +176,7 @@ class ValidatorsTest : public ::testing::Test {
   uint8_t precision;
   iroha::protocol::Amount amount;
   decltype(iroha::time::now()) created_time;
-  google::protobuf::RepeatedPtrField<std::string> assets_id;
+  std::vector<std::string> assets_id;
   iroha::protocol::Pager pager;
 
   // List all used fields in commands

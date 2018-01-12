@@ -74,6 +74,13 @@ namespace shared_model {
         return oldStylePager;
       }
 
+      template <typename T, typename OldModelQueryType>
+      DEPRECATED static void initAllocatedOldModel(T obj, OldModelQueryType *oldModel) {
+        auto oldModelPager =
+            std::unique_ptr<iroha::model::Pager>(obj.pager().makeOldModel());
+        new (&oldModel->pager) iroha::model::Pager(*oldModelPager);
+      }
+
       std::string toString() const override {
         return detail::PrettyStringBuilder()
             .init("Pager")

@@ -23,6 +23,7 @@
 
 #include "datetime/time.hpp"
 #include "interfaces/commands/command.hpp"
+#include "interfaces/common_objects/pager.hpp"
 #include "validator/address_validator.hpp"
 #include "validators/answer.hpp"
 
@@ -68,11 +69,13 @@ namespace shared_model {
       void validateAssetsId(
           ReasonsGroupType &reason,
           const interface::types::AssetIdCollectionType &assets_id) const {
-        for (auto const& asset_id : assets_id) {
-          if (not std::regex_match(asset_id, asset_id_pattern_)) {
-            reason.second.push_back("Wrongly formed asset_id in assets_id");
-            break;
-          }
+        if (std::any_of(assets_id.begin(),
+                        assets_id.end(),
+                        [this](const auto &asset_id) {
+                          return not std::regex_match(asset_id,
+                                                      asset_id_pattern_);
+                        })) {
+          reason.second.push_back("Wrongly formed asset_id in assets_id");
         }
       }
 
@@ -82,6 +85,27 @@ namespace shared_model {
           auto message =
               (boost::format("Amount must be greater than 0, passed value: %d")
                % amount.intValue())
+                  .str();
+          reason.second.push_back(message);
+        }
+      }
+
+      void validatePager(ReasonsGroupType &reason,
+                         const interface::Pager &pager) const {
+        if (pager.transactionHash().size() > 0
+            and pager.transactionHash().size() != iroha::hash256_t::size()) {
+          auto message = (boost::format("Pager transaction hash size is "
+                                        "invalid, passed value size: %d")
+                          % pager.transactionHash().size())
+                             .str();
+          reason.second.push_back(message);
+        }
+        if (pager.limit() == 0
+            or pager.limit() > interface::Pager::MaxLimit()) {
+          auto message =
+              (boost::format("Pager limit must be greater than 0 and less than "
+                             "or equal to 100, passed value: %d")
+               % pager.limit())
                   .str();
           reason.second.push_back(message);
         }
@@ -218,7 +242,8 @@ namespace shared_model {
         if (now < timestamp) {
           auto message = (boost::format("bad timestamp: sent from future, "
                                         "timestamp: %llu, now: %llu")
-                          % timestamp % now)
+                          % timestamp
+                          % now)
                              .str();
           reason.second.push_back(std::move(message));
         }
@@ -227,7 +252,8 @@ namespace shared_model {
           auto message =
               (boost::format(
                    "bad timestamp: too old, timestamp: %llu, now: %llu")
-               % timestamp % now)
+               % timestamp
+               % now)
                   .str();
           reason.second.push_back(std::move(message));
         }
