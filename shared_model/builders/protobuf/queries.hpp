@@ -120,7 +120,7 @@ namespace shared_model {
           const interface::Transaction::HashType &pager_tx_hash =
             interface::Transaction::HashType(""),
           const interface::Pager::Limit &pager_limit =
-            interface::Pager::MaxLimit{}) const {
+            interface::MAX_PAGER_LIMIT) const {
         return queryField([&](auto proto_query) {
           auto query = proto_query->mutable_get_account_transactions();
           query->set_account_id(account_id);
@@ -136,7 +136,7 @@ namespace shared_model {
           const interface::Transaction::HashType &pager_tx_hash =
             interface::Transaction::HashType(""),
           const interface::Pager::Limit &pager_limit =
-            interface::Pager::MaxLimit{}) {
+            interface::MAX_PAGER_LIMIT) {
         return queryField([&](auto proto_query) {
           auto query =
               proto_query->mutable_get_account_asset_transactions();

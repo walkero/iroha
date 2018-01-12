@@ -38,18 +38,6 @@ namespace shared_model {
       using Limit = uint16_t;
 
       /**
-       * Max limit
-       */
-      struct MaxLimit {
-        constexpr operator Limit() const {
-          constexpr Limit limit = 100;
-          static_assert(limit == iroha::model::Pager::MAX_PAGER_LIMIT,
-                        "Should be equal to old fashioned model's");
-          return limit;
-        }
-      };
-
-      /**
        * @return transaction hash of pager
        */
       virtual const Transaction::HashType &transactionHash() const = 0;
@@ -89,6 +77,13 @@ namespace shared_model {
             .finalize();
       }
     };
+
+    /**
+     * Max limit
+     */
+    constexpr Pager::Limit MAX_PAGER_LIMIT = 100;
+    static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,
+                  "Should be equal to old fashioned model's");
   }  // namespace interface
 }  // namespace shared_model
 #endif  // IROHA_SHARED_MODEL_PAGER_HPP
