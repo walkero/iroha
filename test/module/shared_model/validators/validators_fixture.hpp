@@ -18,9 +18,6 @@
 #ifndef IROHA_VALIDATORS_FIXTURE_HPP
 #define IROHA_VALIDATORS_FIXTURE_HPP
 
-#include <google/protobuf/dynamic_message.h>
-#include <google/protobuf/reflection.h>
-#include <google/protobuf/stubs/casts.h>
 #include <gtest/gtest.h>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/algorithm/for_each.hpp>

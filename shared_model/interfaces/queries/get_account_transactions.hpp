@@ -43,10 +43,7 @@ namespace shared_model {
       virtual OldModelType *makeOldModel() const override {
         auto oldModel = new iroha::model::GetAccountTransactions;
         oldModel->account_id = accountId();
-        // placement-new is used to avoid from allocating old style pager twice
-        auto oldModelPager =
-          std::unique_ptr<iroha::model::Pager>(pager().makeOldModel());
-        new (&oldModel->pager) iroha::model::Pager(*oldModelPager);
+        Pager::initAllocatedOldModel(pager(), oldModel);
         return oldModel;
       }
 

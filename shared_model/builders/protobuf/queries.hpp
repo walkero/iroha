@@ -118,15 +118,13 @@ namespace shared_model {
       auto getAccountTransactions(
           const interface::types::AccountIdType &account_id,
           const interface::Transaction::HashType &pager_tx_hash =
-            interface::Transaction::HashType(""),
+              interface::Transaction::HashType(""),
           const interface::Pager::Limit &pager_limit =
-            interface::MAX_PAGER_LIMIT) const {
-        return queryField([&](auto proto_query) {
+              interface::MAX_PAGER_LIMIT) const {
+        return queryField([&, this](auto proto_query) {
           auto query = proto_query->mutable_get_account_transactions();
           query->set_account_id(account_id);
-          auto &mutable_pager = *query->mutable_pager();
-          mutable_pager.set_tx_hash(toBinaryString(pager_tx_hash));
-          mutable_pager.set_limit(pager_limit);
+          deserializePager(*query->mutable_pager(), pager_tx_hash, pager_limit);
         });
       }
 
@@ -134,19 +132,16 @@ namespace shared_model {
           const interface::types::AccountIdType &account_id,
           const interface::types::AssetIdCollectionType &assets_id,
           const interface::Transaction::HashType &pager_tx_hash =
-            interface::Transaction::HashType(""),
+              interface::Transaction::HashType(""),
           const interface::Pager::Limit &pager_limit =
-            interface::MAX_PAGER_LIMIT) {
-        return queryField([&](auto proto_query) {
-          auto query =
-              proto_query->mutable_get_account_asset_transactions();
+              interface::MAX_PAGER_LIMIT) {
+        return queryField([&, this](auto proto_query) {
+          auto query = proto_query->mutable_get_account_asset_transactions();
           query->set_account_id(account_id);
           boost::for_each(assets_id, [&query](const auto &asset) {
             query->add_assets_id(asset);
           });
-          auto &mutable_pager = *query->mutable_pager();
-          mutable_pager.set_tx_hash(toBinaryString(pager_tx_hash));
-          mutable_pager.set_limit(pager_limit);
+          deserializePager(*query->mutable_pager(), pager_tx_hash, pager_limit);
         });
       }
 
@@ -160,21 +155,18 @@ namespace shared_model {
         });
       }
 
-      auto getAccountDetail(
-          const interface::types::AccountIdType &account_id,
-          const interface::types::DetailType &detail) {
+      auto getAccountDetail(const interface::types::AccountIdType &account_id,
+                            const interface::types::DetailType &detail) {
         return queryField([&](auto proto_query) {
-          auto query =
-              proto_query->mutable_get_account_detail();
+          auto query = proto_query->mutable_get_account_detail();
           query->set_account_id(account_id);
           query->set_detail(detail);
         });
       }
 
       auto getRoles() const {
-        return queryField([&](auto proto_query) {
-          proto_query->mutable_get_roles();
-        });
+        return queryField(
+            [&](auto proto_query) { proto_query->mutable_get_roles(); });
       }
 
       auto getAssetInfo(const interface::types::AssetIdType &asset_id) const {
@@ -226,6 +218,13 @@ namespace shared_model {
       static const int total = RequiredFields::TOTAL;
 
      private:
+      void deserializePager(iroha::protocol::Pager &mut_pager,
+                            const interface::Transaction::HashType &tx_hash,
+                            const interface::Pager::Limit &limit) const {
+        mut_pager.set_tx_hash(toBinaryString(tx_hash));
+        mut_pager.set_limit(limit);
+      }
+
       ProtoQuery query_;
       SV stateless_validator_;
     };
