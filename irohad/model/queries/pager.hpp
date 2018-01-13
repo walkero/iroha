@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include "common/types.hpp"
 
 namespace iroha {
   namespace model {

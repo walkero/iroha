@@ -16,9 +16,6 @@
  */
 
 #include "model/converters/pb_common.hpp"
-#include "byteutils.hpp"
-#include "common/types.hpp"
-#include "queries.pb.h"
 
 namespace iroha {
   namespace model {
@@ -43,21 +40,6 @@ namespace iroha {
                 value.third(),
                 value.fourth(),
                 static_cast<uint8_t>(pb_amount.precision())};
-      }
-
-      protocol::Pager serializePager(const model::Pager &pager) {
-        protocol::Pager pb_pager;
-        pb_pager.set_tx_hash(pager.tx_hash.to_string());
-        pb_pager.set_limit(pager.limit);
-        return pb_pager;
-      }
-
-      model::Pager deserializePager(const protocol::Pager &pb_pager) {
-        model::Pager pager;
-        pager.tx_hash = stringToBlob<hash256_t::size()>(pb_pager.tx_hash())
-                            .value_or(hash256_t{});
-        pager.limit = static_cast<decltype(pager.limit)>(pb_pager.limit());
-        return pager;
       }
     }  // namespace converters
   }    // namespace model
