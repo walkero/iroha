@@ -70,7 +70,7 @@ namespace iroha {
          */
         Pager deserializePager(const protocol::Pager &pb_pager) const;
 
-      private:
+       private:
         // Query serializer:
         protocol::Query serializeGetAccount(
             std::shared_ptr<const Query> query) const;

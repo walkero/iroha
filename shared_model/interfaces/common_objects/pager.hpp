@@ -63,7 +63,8 @@ namespace shared_model {
       }
 
       template <typename T, typename OldModelQueryType>
-      DEPRECATED static void initAllocatedOldModel(const T &obj, OldModelQueryType *oldModel) {
+      DEPRECATED static void initAllocatedOldModel(
+          const T &obj, OldModelQueryType *oldModel) {
         // placement-new is used to avoid from allocating old style pager twice
         auto oldModelPager =
             std::unique_ptr<iroha::model::Pager>(obj.makeOldModel());

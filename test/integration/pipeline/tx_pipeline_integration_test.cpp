@@ -196,7 +196,8 @@ struct GetAccountAndAccountAssetTransactionsTest
 
   // c++ class cannot have virtual data member
   auto adminTransaction() {
-    static auto tx = shared_model::proto::TransactionBuilder()
+    static auto tx =
+        shared_model::proto::TransactionBuilder()
             .txCounter(txCounter)
             .creatorAccountId(adminId)
             .addAssetQuantity(adminId, assetId, "1000.00")
@@ -208,7 +209,7 @@ struct GetAccountAndAccountAssetTransactionsTest
   }
 
   auto userTransaction() {
-     static auto tx =
+    static auto tx =
         shared_model::proto::TransactionBuilder()
             .txCounter(txCounter)
             .creatorAccountId(creatorAccountId)
@@ -217,7 +218,7 @@ struct GetAccountAndAccountAssetTransactionsTest
             .createdTime(createdTime)
             .build()
             .signAndAddSignature(usersKeypair[0]);
-     return tx;
+    return tx;
   }
 
   void sendTransactions() {

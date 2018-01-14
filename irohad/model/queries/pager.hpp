@@ -44,10 +44,12 @@ namespace iroha {
        */
       static constexpr uint16_t MAX_PAGER_LIMIT = 100;
 
-      bool operator==(Pager const& rhs) const {
+      bool operator==(Pager const &rhs) const {
         return tx_hash == rhs.tx_hash and limit == rhs.limit;
       }
-      bool operator!=(Pager const& rhs) const { return not(operator==(rhs)); }
+      bool operator!=(Pager const &rhs) const {
+        return not(operator==(rhs));
+      }
     };
   }  // namespace model
 }  // namespace iroha

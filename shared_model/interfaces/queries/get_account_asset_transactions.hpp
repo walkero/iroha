@@ -17,8 +17,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include "interfaces/base/primitive.hpp"
-#include "interfaces/common_objects/types.hpp"
 #include "interfaces/common_objects/pager.hpp"
+#include "interfaces/common_objects/types.hpp"
 #include "model/queries/get_account_asset_transactions.hpp"
 
 #ifndef IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP

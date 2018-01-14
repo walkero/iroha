@@ -100,8 +100,7 @@ namespace shared_model {
                              .str();
           reason.second.push_back(message);
         }
-        if (pager.limit() == 0
-            or pager.limit() > interface::MAX_PAGER_LIMIT) {
+        if (pager.limit() == 0 or pager.limit() > interface::MAX_PAGER_LIMIT) {
           auto message =
               (boost::format("Pager limit must be greater than 0 and less than "
                              "or equal to 100, passed value: %d")
