@@ -17,8 +17,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include "interfaces/base/primitive.hpp"
-#include "interfaces/common_objects/types.hpp"
 #include "interfaces/common_objects/pager.hpp"
+#include "interfaces/common_objects/types.hpp"
 #include "model/queries/get_account_asset_transactions.hpp"
 
 #ifndef IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP
@@ -45,12 +45,13 @@ namespace shared_model {
       /**
        * @return pager of requested transactions
        */
-      virtual const interface::Pager &pager() const = 0;
+      virtual const Pager &pager() const = 0;
 
       OldModelType *makeOldModel() const override {
         auto oldModel = new iroha::model::GetAccountAssetTransactions;
         oldModel->account_id = accountId();
         oldModel->assets_id = assetsId();
+        Pager::initAllocatedOldModel(pager(), oldModel);
         return oldModel;
       }
 
@@ -59,11 +60,13 @@ namespace shared_model {
             .init("GetAccountAssetTransactions")
             .append("account_id", accountId())
             .append("assets_id", boost::algorithm::join(assetsId(), ","))
+            .append("pager", pager().toString())
             .finalize();
       }
 
       bool operator==(const ModelType &rhs) const override {
-        return accountId() == rhs.accountId() and assetsId() == rhs.assetsId();
+        return accountId() == rhs.accountId() and assetsId() == rhs.assetsId()
+            and pager() == rhs.pager();
       }
     };
 

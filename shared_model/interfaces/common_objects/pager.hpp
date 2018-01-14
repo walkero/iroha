@@ -38,13 +38,6 @@ namespace shared_model {
       using Limit = uint16_t;
 
       /**
-       * Max limit
-       */
-      static constexpr Limit MAX_PAGER_LIMIT = 100;
-      static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,
-                    "Should be equal to old fashioned model's");
-
-      /**
        * @return transaction hash of pager
        */
       virtual const Transaction::HashType &transactionHash() const = 0;
@@ -69,6 +62,15 @@ namespace shared_model {
         return oldStylePager;
       }
 
+      template <typename T, typename OldModelQueryType>
+      DEPRECATED static void initAllocatedOldModel(
+          const T &obj, OldModelQueryType *oldModel) {
+        // placement-new is used to avoid from allocating old style pager twice
+        auto oldModelPager =
+            std::unique_ptr<iroha::model::Pager>(obj.makeOldModel());
+        new (&oldModel->pager) iroha::model::Pager(*oldModelPager);
+      }
+
       std::string toString() const override {
         return detail::PrettyStringBuilder()
             .init("Pager")
@@ -77,6 +79,13 @@ namespace shared_model {
             .finalize();
       }
     };
+
+    /**
+     * Max limit
+     */
+    constexpr Pager::Limit MAX_PAGER_LIMIT = 100;
+    static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,
+                  "Should be equal to old fashioned model's");
   }  // namespace interface
 }  // namespace shared_model
 #endif  // IROHA_SHARED_MODEL_PAGER_HPP
