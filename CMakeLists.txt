@@ -14,9 +14,9 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 SET(CMAKE_CXX_FLAGS_DEBUG   "-g -Wextra -Wno-unused-parameter -Wno-deprecated-declarations -O0")
 SET(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
 SET(CMAKE_INSTALL_RPATH "../lib")
+set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 
 if(COVERAGE)
-  set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
   set(CMAKE_CXX_FLAGS "--coverage ${CMAKE_CXX_FLAGS}")
   set(CMAKE_C_FLAGS "--coverage ${CMAKE_C_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
@@ -41,6 +41,7 @@ option(ENABLE_LIBS_PACKAGING "Enable libs packaging" ON)
 option(SWIG_PYTHON  "Generate Swig Python bindings"  OFF)
 option(SWIG_JAVA    "Generate Swig Java bindings"    OFF)
 option(SWIG_CSHARP  "Generate Swig C# bindings"      OFF)
+option(CPPREFLECTION "Use CPP reflection in tests"   OFF)
 
 if (NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Debug)
@@ -69,6 +70,7 @@ message(STATUS "-DENABLE_LIBS_PACKAGING=${ENABLE_LIBS_PACKAGING}")
 message(STATUS "-DSWIG_PYTHON=${SWIG_PYTHON}")
 message(STATUS "-DSWIG_JAVA=${SWIG_JAVA}")
 message(STATUS "-DSWIG_CSHARP=${SWIG_CSHARP}")
+message(STATUS "-DCPPREFLECTION=${CPPREFLECTION}")
 
 SET(IROHA_SCHEMA_DIR "${PROJECT_SOURCE_DIR}/schema")
 include_directories(
@@ -101,10 +103,6 @@ if (FUZZING)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_subdirectory(fuzz)
   else()
-    message(Fuzzing with compilers other than clang does not supported yet)
+    message(FATAL_ERROR Fuzzing with compilers other than clang does not supported yet)
   endif()
 endif()
-
-
-
-

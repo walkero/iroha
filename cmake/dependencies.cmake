@@ -105,3 +105,14 @@ endif()
 #          ed25519/sha3           #
 ###################################
 find_package(ed25519)
+
+
+###################################
+#          siplasplas             #
+###################################
+if(CPPREFLECTION)
+  if(NOT TESTING)
+    message(FATAL_ERROR "CPPREFLECTION can not be used without TESTING")
+  endif()
+  find_package(siplasplasbootstrap)
+endif()

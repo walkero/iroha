@@ -6,6 +6,7 @@ ARG PARALLELISM=1
 
 ENV IROHA_HOME /opt/iroha
 ENV IROHA_BUILD /opt/iroha/build
+ENV LLVM_VERSION 3.8
 
 RUN apt-get update; \
     apt-get -y upgrade; \
@@ -19,14 +20,22 @@ RUN add-apt-repository -y ppa:git-core/ppa; \
 RUN apt-get -y --no-install-recommends install build-essential python-software-properties \
         automake libtool \
         # dev dependencies
-        libssl-dev zlib1g-dev libc6-dbg golang \
+        libssl-dev zlib1g-dev libc6-dbg golang tmux \
         # CircleCI dependencies
         git ssh tar gzip ca-certificates python3 python3-pip python3-setuptools \
         # code coverage
         lcov \
         # other
         wget curl file unzip gdb iputils-ping vim ccache \
-        gcovr cppcheck doxygen graphviz graphviz-dev; \
+        gcovr cppcheck doxygen graphviz graphviz-dev \
+        # LLVM for siplasplas
+        llvm-${LLVM_VERSION} \
+        llvm-${LLVM_VERSION}-dev \
+        clang-${LLVM_VERSION}-dev \
+        clang-${LLVM_VERSION} \
+        clang \
+        # python2 pip and mercurial for siplasplas (yuck!)
+        python-pip mercurial; \
     apt-get -y clean
 
 RUN pip3 install --upgrade pip; \
@@ -72,7 +81,7 @@ RUN git clone https://github.com/c-ares/c-ares /tmp/c-ares; \
     cmake --build /tmp/c-ares/build --target install -- -j${PARALLELISM}; \
     ldconfig; \
     rm -rf /tmp/c-ares
-    
+
 # install grpc
 RUN git clone https://github.com/grpc/grpc /tmp/grpc; \
     (cd /tmp/grpc ; git checkout bfcbad3b86c7912968dc8e64f2121c920dad4dfb); \
@@ -194,11 +203,29 @@ RUN git clone git://github.com/warchant/ed25519.git /tmp/ed25519; \
     ldconfig; \
     rm -rf /tmp/ed25519
 
-RUN adduser iroha-ci
+# install siplasplas (C++ reflection)
+ENV SIPLASPLAS_ROOT /opt/siplasplas
+ENV SIPLASPLAS_LIBCLANG_INCLUDE_DIR /usr/lib/llvm-${LLVM_VERSION}/include
+ENV SIPLASPLAS_LIBCLANG_LIBRARY /usr/lib/llvm-${LLVM_VERSION}/lib/libclang.so
+ENV SIPLASPLAS_LIBRARIES_STATIC OFF
+ENV SIPLASPLAS_NAME siplasplas-master-GNU-6_2_1-Debug-dynamic
+RUN mkdir -p ${SIPLASPLAS_ROOT}; \
+    curl -L -o ${SIPLASPLAS_ROOT}/spp.tar.gz https://github.com/Manu343726/siplasplas/releases/download/0.0.2-1/${SIPLASPLAS_NAME}.tar.gz; \
+    tar -xz -C ${SIPLASPLAS_ROOT} -f ${SIPLASPLAS_ROOT}/spp.tar.gz; \
+    mv ${SIPLASPLAS_ROOT}/${SIPLASPLAS_NAME}/* ${SIPLASPLAS_ROOT}; \
+    rm -rf ${SIPLASPLAS_ROOT}/spp.tar.gz ${SIPLASPLAS_ROOT}/${SIPLASPLAS_NAME}; \
+    pip3 install virtualenv; \
+    (cd ${SIPLASPLAS_ROOT}; virtualenv -p python2 venvpy2 --distribute); \
+    bash -c '\
+        source ${SIPLASPLAS_ROOT}/venvpy2/bin/activate && \
+        pip2 install clang==${LLVM_VERSION} && \
+        pip2 install -r ${SIPLASPLAS_ROOT}/bin/reflection-parser/parser/requirements.txt'
+
+
 WORKDIR /opt/iroha
 RUN chmod -R 777 /opt/iroha; \
     mkdir -p /tmp/ccache -m 777;
 
 USER iroha-ci
 
-CMD ["/bin/bash"]
+CMD ["bash"]

@@ -26,3 +26,4 @@ target_link_libraries(test_block_generator
     )
 
 target_include_directories(test_block_generator PUBLIC ${PROJECT_SOURCE_DIR}/test)
+
