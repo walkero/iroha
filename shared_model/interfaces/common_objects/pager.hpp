@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2017, 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -62,13 +62,19 @@ namespace shared_model {
         return oldStylePager;
       }
 
-      template <typename T, typename OldModelQueryType>
-      DEPRECATED static void initAllocatedOldModel(
-          const T &obj, OldModelQueryType *oldModel) {
+      /**
+       * Assign new model pager to old model pager without new allocation
+       * @tparam OldModel - Old model pager type
+       * @tparam Model - New model pager type
+       * @param oldModelPager - pointer type of old model pager
+       * @param newModelPager - type of new model pager (interface)
+       */
+      template <typename OldModel, typename Model>
+      DEPRECATED static void setAllocatedPager(OldModel *oldModelPager,
+                                               const Model &newModelPager) {
         // placement-new is used to avoid from allocating old style pager twice
-        auto oldModelPager =
-            std::unique_ptr<iroha::model::Pager>(obj.makeOldModel());
-        new (&oldModel->pager) iroha::model::Pager(*oldModelPager);
+        auto o = std::unique_ptr<iroha::model::Pager>(newModelPager.makeOldModel());
+        new (oldModelPager) iroha::model::Pager(*o);
       }
 
       std::string toString() const override {
@@ -81,7 +87,8 @@ namespace shared_model {
     };
 
     /**
-     * Max limit
+     * Max limit for pagination.
+     * Clients can retrieve at most MAX_PAGER_LIMIT transactions in a query.
      */
     constexpr Pager::Limit MAX_PAGER_LIMIT = 100;
     static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,

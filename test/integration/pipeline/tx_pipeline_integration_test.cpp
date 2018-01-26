@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2017, 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,18 +33,25 @@ class TxPipelineIntegrationTest : public TxPipelineIntegrationTestFixture {
   void SetUp() override {
     iroha::ametsuchi::AmetsuchiTest::SetUp();
 
-    genesis_block =
-        iroha::model::generators::BlockGenerator().generateGenesisBlock(
-            0,
-            {TransactionGenerator().generateGenesisTransaction(
-                 0, {"0.0.0.0:10001"}),
-             generateCreateUsersTransaction()});
+    // create 1st genesis tx
+    auto genesisTx =
+        TransactionGenerator().generateGenesisTransaction(0, {"0.0.0.0:10001"});
 
+    // admin key file is generated after generateGenesisTransaction()
     auto adminKey = iroha::KeysManagerImpl(adminId).loadKeys();
     ASSERT_TRUE(adminKey.has_value());
     adminKeypair = std::make_shared<crypto::Keypair>(
         crypto::PublicKey(adminKey->pubkey.to_string()),
         crypto::PrivateKey(adminKey->privkey.to_string()));
+
+    // create 2nd genesis tx
+    std::unique_ptr<iroha::model::Transaction> usersGenesisTx(
+        generateCreateUsersTransaction(*adminKeypair).makeOldModel());
+
+    // create genesis block
+    genesis_block =
+        iroha::model::generators::BlockGenerator().generateGenesisBlock(
+            0, {genesisTx, *usersGenesisTx});
 
     manager = std::make_shared<iroha::KeysManagerImpl>("node0");
     auto keypair = manager->loadKeys().value();
@@ -89,26 +96,21 @@ class TxPipelineIntegrationTest : public TxPipelineIntegrationTestFixture {
     std::remove("example@test.priv");
   }
 
-  iroha::model::Transaction generateCreateUsersTransaction() {
-    std::vector<iroha::pubkey_t> userPubkeys;
+  proto::Transaction generateCreateUsersTransaction(
+      const crypto::Keypair &keypair) {
+    using CryptoProvider = crypto::CryptoProviderEd25519Sha3;
     for (size_t i = 0; i < 2; ++i) {
-      auto userKeysManager = iroha::KeysManagerImpl(usersId[i]);
-      userKeysManager.createKeys(usersId[i]);
-      auto userKey = userKeysManager.loadKeys();
-      EXPECT_TRUE(userKey.has_value());
-      usersKeypair.emplace_back(
-          crypto::PublicKey(userKey->pubkey.to_string()),
-          crypto::PrivateKey(userKey->privkey.to_string()));
-      userPubkeys.push_back(userKey->pubkey);
+      usersKeypair.emplace_back(CryptoProvider::generateKeypair(
+          CryptoProvider::generateSeed(usersId[i])));
     }
-    return TransactionGenerator().generateTransaction(
-        0,
-        "",
-        1,
-        {CommandGenerator().generateCreateAccount(
-             usersName[0], domainName, userPubkeys[0]),
-         CommandGenerator().generateCreateAccount(
-             usersName[1], domainName, userPubkeys[1])});
+    return shared_model::proto::TransactionBuilder()
+        .txCounter(1)
+        .createdTime(iroha::time::now())
+        .creatorAccountId(adminId)
+        .createAccount(usersName[0], domainName, usersKeypair[0].publicKey())
+        .createAccount(usersName[1], domainName, usersKeypair[1].publicKey())
+        .build()
+        .signAndAddSignature(keypair);
   }
 
   std::shared_ptr<shared_model::crypto::Keypair> adminKeypair;

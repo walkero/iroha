@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2017, 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ namespace shared_model {
       virtual OldModelType *makeOldModel() const override {
         auto oldModel = new iroha::model::GetAccountTransactions;
         oldModel->account_id = accountId();
-        Pager::initAllocatedOldModel(pager(), oldModel);
+        Pager::setAllocatedPager(&oldModel->pager, pager());
         return oldModel;
       }
 
