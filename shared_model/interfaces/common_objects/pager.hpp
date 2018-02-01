@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017, 2018 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,11 @@
 #include "cryptography/blob.hpp"
 #include "interfaces/base/primitive.hpp"
 #include "interfaces/transaction.hpp"
-#include "model/queries/pager.hpp"
 #include "utils/string_builder.hpp"
+
+#ifndef DISABLE_BACKWARD
+#include "model/queries/pager.hpp"
+#endif
 
 namespace shared_model {
   namespace interface {
@@ -52,7 +55,8 @@ namespace shared_model {
             and limit() == rhs.limit();
       }
 
-      OldModelType *makeOldModel() const override {
+#ifndef DISABLE_BACKWARD
+      DEPRECATED OldModelType *makeOldModel() const override {
         iroha::model::Pager *oldStylePager = new iroha::model::Pager();
         using OldStyleTxHash =
             decltype(std::declval<iroha::model::Pager>().tx_hash);
@@ -73,9 +77,11 @@ namespace shared_model {
       DEPRECATED static void setAllocatedPager(OldModel *oldModelPager,
                                                const Model &newModelPager) {
         // placement-new is used to avoid from allocating old style pager twice
-        auto o = std::unique_ptr<iroha::model::Pager>(newModelPager.makeOldModel());
+        auto o =
+            std::unique_ptr<iroha::model::Pager>(newModelPager.makeOldModel());
         new (oldModelPager) iroha::model::Pager(*o);
       }
+#endif
 
       std::string toString() const override {
         return detail::PrettyStringBuilder()
@@ -91,8 +97,11 @@ namespace shared_model {
      * Clients can retrieve at most MAX_PAGER_LIMIT transactions in a query.
      */
     constexpr Pager::Limit MAX_PAGER_LIMIT = 100;
+
+#ifndef DISABLE_BACKWARD
     static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,
                   "Should be equal to old fashioned model's");
+#endif
   }  // namespace interface
 }  // namespace shared_model
 #endif  // IROHA_SHARED_MODEL_PAGER_HPP

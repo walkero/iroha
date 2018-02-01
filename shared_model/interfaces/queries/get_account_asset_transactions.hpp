@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017, 2018 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,10 @@
 #include "interfaces/base/primitive.hpp"
 #include "interfaces/common_objects/pager.hpp"
 #include "interfaces/common_objects/types.hpp"
+
+#ifndef DISABLE_BACKWARD
 #include "model/queries/get_account_asset_transactions.hpp"
+#endif
 
 #ifndef IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP
 #define IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP
@@ -47,13 +50,15 @@ namespace shared_model {
        */
       virtual const Pager &pager() const = 0;
 
-      OldModelType *makeOldModel() const override {
+#ifndef DISABLE_BACKWARD
+      DEPRECATED OldModelType *makeOldModel() const override {
         auto oldModel = new iroha::model::GetAccountAssetTransactions;
         oldModel->account_id = accountId();
         oldModel->assets_id = assetsId();
         Pager::setAllocatedPager(&oldModel->pager, pager());
         return oldModel;
       }
+#endif
 
       std::string toString() const override {
         return detail::PrettyStringBuilder()
