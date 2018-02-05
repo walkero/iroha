@@ -73,12 +73,14 @@ namespace shared_model {
                                 command->makeOldModel()));
                       });
 
-        std::for_each(signatures().begin(),
-                      signatures().end(),
-                      [oldStyleTransaction](auto &sig) {
-                        oldStyleTransaction->signatures.emplace_back(
-                            *sig->makeOldModel());
-                      });
+        std::for_each(
+            signatures().begin(),
+            signatures().end(),
+            [oldStyleTransaction](auto &sig) {
+              std::unique_ptr<iroha::model::Signature> oldModelSignature(
+                  sig->makeOldModel());
+              oldStyleTransaction->signatures.emplace_back(*oldModelSignature);
+            });
 
         return oldStyleTransaction;
       }

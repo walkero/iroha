@@ -25,6 +25,7 @@
 
 #include "builders/protobuf/queries.hpp"
 #include "builders/protobuf/transaction.hpp"
+#include "common/types.hpp"
 #include "module/shared_model/validators/validators_fixture.hpp"
 #include "utils/lazy_initializer.hpp"
 #include "validators/field_validator.hpp"
@@ -189,13 +190,14 @@ class FieldValidatorTest : public ValidatorsTest {
                                 const std::string &field_name,
                                 F field,
                                 const std::string &value) {
-    return makeTestCase(case_name,
-                        field,
-                        value,
-                        false,
-                        (boost::format("Wrongly formed %s, passed value: '%s'")
-                         % field_name % value)
-                            .str());
+    return makeTestCase(
+        case_name,
+        field,
+        value,
+        false,
+        (boost::format("Wrongly formed %s, passed value: '%s'") % field_name
+         % value)
+            .str());
   }
 
   /// Generate test cases for id types with name, separator, and domain
@@ -226,6 +228,31 @@ class FieldValidatorTest : public ValidatorsTest {
   std::vector<FieldTestCase> asset_id_test_cases =
       idTestCases("asset_id", &FieldValidatorTest::asset_id, '#');
 
+  FieldTestCase validAssetsIdTestCase(
+      const std::vector<std::string> &valid_assets) {
+    return makeValidCase(&FieldValidatorTest::assets_id, valid_assets);
+  }
+
+  FieldTestCase invalidAssetsIdTestCase(
+      const std::string &case_name,
+      const std::vector<std::string> &invalid_assets) {
+    return makeTestCase(case_name,
+                        &FieldValidatorTest::assets_id,
+                        invalid_assets,
+                        false,
+                        "Wrongly formed asset_id in assets_id");
+  }
+
+  std::vector<FieldTestCase> asset_id_collection_test_cases{
+      validAssetsIdTestCase({"usd#domain", "riel#domain"}),
+      invalidAssetsIdTestCase("start_with_digit",
+                              {"usd#domain", "1abs#domain"}),
+      invalidAssetsIdTestCase("domain_start_with_digit",
+                              {"usd#domain", "abs#3domain"}),
+      invalidAssetsIdTestCase("empty_string", {"usd#domain", ""}),
+      invalidAssetsIdTestCase("illegal_char", {"usd#domain", "ab++s#do()main"}),
+      invalidAssetsIdTestCase("missing_name", {"usd#domain", "#domain"})};
+
   std::vector<FieldTestCase> amount_test_cases{
       {"valid_amount",
        [&] { amount.mutable_value()->set_fourth(100); },
@@ -235,6 +262,51 @@ class FieldValidatorTest : public ValidatorsTest {
        [&] { amount.mutable_value()->set_fourth(0); },
        false,
        "Amount must be greater than 0, passed value: 0"}};
+
+  std::string invalidPagerLimitMessage(uint16_t value) {
+    return (boost::format("Pager limit must be greater than 0 and less than or "
+                          "equal to 100, "
+                          "passed value: %d")
+            % value)
+        .str();
+  }
+
+  std::vector<FieldTestCase> pager_test_cases{
+      {"valid_pager_tx_hash_is_empty",
+       [&] {
+         pager.set_tx_hash("");
+         pager.set_limit(100);
+       },
+       true,
+       ""},
+      {"valid_pager_tx_hash_size_32",
+       [&] {
+         pager.set_tx_hash(iroha::hash256_t{}.to_string());
+         pager.set_limit(100);
+       },
+       true,
+       ""},
+      {"invalid_pager_tx_hash_size",
+       [&] {
+         pager.set_tx_hash(std::string(10, '0'));
+         pager.set_limit(100);
+       },
+       false,
+       "Pager transaction hash size is invalid, passed value size: 10"},
+      {"invalid_limit_is_0",
+       [&] {
+         pager.set_tx_hash("");
+         pager.set_limit(0);
+       },
+       false,
+       invalidPagerLimitMessage(0)},
+      {"invalid_limit_greater_than_100",
+       [&] {
+         pager.set_tx_hash("");
+         pager.set_limit(101);
+       },
+       false,
+       invalidPagerLimitMessage(101)}};
 
   FieldTestCase invalidAddressTestCase(const std::string &case_name,
                                        const std::string &address) {
@@ -357,6 +429,15 @@ class FieldValidatorTest : public ValidatorsTest {
                     &FieldValidator::validateAssetId,
                     &FieldValidatorTest::asset_id,
                     asset_id_test_cases),
+      makeValidator("assets_id",
+                    &FieldValidator::validateAssetsId,
+                    &FieldValidatorTest::assets_id,
+                    asset_id_collection_test_cases),
+      makeTransformValidator("pager",
+                             &FieldValidator::validatePager,
+                             &FieldValidatorTest::pager,
+                             [](auto &&x) { return proto::Pager(x); },
+                             pager_test_cases),
       makeTransformValidator("amount",
                              &FieldValidator::validateAmount,
                              &FieldValidatorTest::amount,

@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-#include "model/converters/pb_common.hpp"
 #include "model/converters/pb_query_factory.hpp"
+#include "byteutils.hpp"
 #include "cryptography/ed25519_sha3_impl/internal/sha3_hash.hpp"
 #include "model/common.hpp"
+#include "model/converters/pb_common.hpp"
 #include "model/queries/get_account.hpp"
+#include "model/queries/get_account_asset_transactions.hpp"
 #include "model/queries/get_account_assets.hpp"
 #include "model/queries/get_account_detail.hpp"
+#include "model/queries/get_account_transactions.hpp"
 #include "model/queries/get_asset_info.hpp"
 #include "model/queries/get_roles.hpp"
 #include "model/queries/get_signatories.hpp"
-#include "model/queries/get_account_transactions.hpp"
-#include "model/queries/get_account_asset_transactions.hpp"
 #include "model/queries/get_transactions.hpp"
 #include "queries.pb.h"
 
@@ -122,16 +123,14 @@ namespace iroha {
               break;
             }
             case Query_Payload::QueryCase::kGetAccountAssetTransactions: {
-              const auto &pb_cast =
-                pl.get_account_asset_transactions();
+              const auto &pb_cast = pl.get_account_asset_transactions();
               auto query = GetAccountAssetTransactions();
               query.account_id = pb_cast.account_id();
               std::copy(pb_cast.assets_id().begin(),
                         pb_cast.assets_id().end(),
                         std::back_inserter(query.assets_id));
               query.pager = deserializePager(pb_cast.pager());
-              val = std::make_shared<
-                model::GetAccountAssetTransactions>(query);
+              val = std::make_shared<model::GetAccountAssetTransactions>(query);
               break;
             }
             case Query_Payload::QueryCase::kGetRoles: {
@@ -146,7 +145,7 @@ namespace iroha {
             }
             case Query_Payload::QueryCase::kGetRolePermissions: {
               const auto &pb_cast = pl.get_role_permissions();
-              val = std::make_shared <GetRolePermissions>(pb_cast.role_id());
+              val = std::make_shared<GetRolePermissions>(pb_cast.role_id());
               break;
             }
             default: {
@@ -167,6 +166,34 @@ namespace iroha {
         val->created_ts = pl.created_time();
         val->creator_account_id = pl.creator_account_id();
         return val;
+      }
+
+      protocol::Pager PbQueryFactory::serializePager(
+          const model::Pager &pager) const {
+        protocol::Pager pb_pager;
+        // Empty tx_hash is allowed in Pager
+        if (std::all_of(pager.tx_hash.begin(), pager.tx_hash.end(), [](auto x) {
+              return x == 0;
+            })) {
+          pb_pager.set_tx_hash("");
+        } else {
+          pb_pager.set_tx_hash(pager.tx_hash.to_string());
+        }
+        pb_pager.set_limit(pager.limit);
+        return pb_pager;
+      }
+
+      Pager PbQueryFactory::deserializePager(
+          const protocol::Pager &pb_pager) const {
+        Pager pager;
+        if (auto tx_hash =
+                stringToBlob<hash256_t::size()>(pb_pager.tx_hash())) {
+          pager.tx_hash = *tx_hash;
+        } else if (not pb_pager.tx_hash().empty()) {
+          log_->warn("pager transaction hash broken");
+        }
+        pager.limit = static_cast<decltype(pager.limit)>(pb_pager.limit());
+        return pager;
       }
 
       void PbQueryFactory::serializeQueryMetaData(
@@ -216,12 +243,12 @@ namespace iroha {
       }
 
       protocol::Query PbQueryFactory::serializeGetAccountDetail(
-        std::shared_ptr<const Query> query) const {
+          std::shared_ptr<const Query> query) const {
         protocol::Query pb_query;
         serializeQueryMetaData(pb_query, query);
         auto tmp = std::static_pointer_cast<const GetAccountDetail>(query);
         auto pb_query_mut =
-          pb_query.mutable_payload()->mutable_get_account_detail();
+            pb_query.mutable_payload()->mutable_get_account_detail();
         pb_query_mut->set_account_id(tmp->account_id);
         pb_query_mut->set_detail(tmp->detail);
         return pb_query;
@@ -251,9 +278,10 @@ namespace iroha {
         auto pb_query_mut = pb_query.mutable_payload()
                                 ->mutable_get_account_asset_transactions();
         pb_query_mut->set_account_id(account_id);
-        std::for_each(assets_id.begin(), assets_id.end(), [&pb_query_mut](auto id) {
-          (*pb_query_mut->add_assets_id()) = id;
-        });
+        std::for_each(
+            assets_id.begin(), assets_id.end(), [&pb_query_mut](auto id) {
+              (*pb_query_mut->add_assets_id()) = id;
+            });
         *pb_query_mut->mutable_pager() = serializePager(tmp->pager);
         return pb_query;
       }
@@ -264,7 +292,7 @@ namespace iroha {
         serializeQueryMetaData(pb_query, query);
         auto tmp = std::static_pointer_cast<const GetTransactions>(query);
         auto pb_query_mut =
-          pb_query.mutable_payload()->mutable_get_transactions();
+            pb_query.mutable_payload()->mutable_get_transactions();
         std::for_each(tmp->tx_hashes.begin(),
                       tmp->tx_hashes.end(),
                       [&pb_query_mut](auto tx_hash) {

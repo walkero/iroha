@@ -21,8 +21,8 @@
 #include <unordered_map>
 #include "logger/logger.hpp"
 #include "model/common.hpp"
-#include "model/query.hpp"
 #include "model/queries/pager.hpp"
+#include "model/query.hpp"
 #include "queries.pb.h"
 
 namespace iroha {
@@ -40,7 +40,7 @@ namespace iroha {
          * @return model Query
          */
         optional_ptr<model::Query> deserialize(
-            const protocol::Query& pb_query) const;
+            const protocol::Query &pb_query) const;
 
         /**
          * Convert model query to proto query
@@ -51,6 +51,24 @@ namespace iroha {
             std::shared_ptr<const model::Query> query) const;
 
         PbQueryFactory();
+
+        /**
+         * Serialize pager from model to proto
+         * @param pager - model Pager
+         * @return protocol Pager
+         * @note Empty hash256_t, which is 0000... is converted to empty string
+         * tx_hash
+         */
+        protocol::Pager serializePager(const model::Pager &pager) const;
+
+        /**
+         * Deserialize pager of queries.
+         * @param pb_pager - protocol pager object
+         * @note Empty string tx_hash is converted to empty hash256_t, which is
+         * 0000...
+         * @note Logger is used in this function, so not in pb_common
+         */
+        Pager deserializePager(const protocol::Pager &pb_pager) const;
 
        private:
         // Query serializer:
@@ -74,13 +92,12 @@ namespace iroha {
             std::shared_ptr<const Query> query) const;
         protocol::Query serializeGetRolePermissions(
             std::shared_ptr<const Query> query) const;
-
         /**
          * Serialize and add meta data of model query to proto query
          * @param pb_query - protocol query  object
          * @param query - model query to serialize
          */
-        void serializeQueryMetaData(protocol::Query& pb_query,
+        void serializeQueryMetaData(protocol::Query &pb_query,
                                     std::shared_ptr<const Query> query) const;
 
         using Serializer = protocol::Query (PbQueryFactory::*)(

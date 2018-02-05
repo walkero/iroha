@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,12 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include "interfaces/base/primitive.hpp"
-#include "interfaces/common_objects/types.hpp"
 #include "interfaces/common_objects/pager.hpp"
+#include "interfaces/common_objects/types.hpp"
+
+#ifndef DISABLE_BACKWARD
 #include "model/queries/get_account_asset_transactions.hpp"
+#endif
 
 #ifndef IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP
 #define IROHA_SHARED_MODEL_GET_ACCOUNT_ASSET_TRANSACTIONS_HPP
@@ -45,25 +48,30 @@ namespace shared_model {
       /**
        * @return pager of requested transactions
        */
-      virtual const interface::Pager &pager() const = 0;
+      virtual const Pager &pager() const = 0;
 
-      OldModelType *makeOldModel() const override {
+#ifndef DISABLE_BACKWARD
+      DEPRECATED OldModelType *makeOldModel() const override {
         auto oldModel = new iroha::model::GetAccountAssetTransactions;
         oldModel->account_id = accountId();
         oldModel->assets_id = assetsId();
+        Pager::setAllocatedPager(&oldModel->pager, pager());
         return oldModel;
       }
+#endif
 
       std::string toString() const override {
         return detail::PrettyStringBuilder()
             .init("GetAccountAssetTransactions")
             .append("account_id", accountId())
             .append("assets_id", boost::algorithm::join(assetsId(), ","))
+            .append("pager", pager().toString())
             .finalize();
       }
 
       bool operator==(const ModelType &rhs) const override {
-        return accountId() == rhs.accountId() and assetsId() == rhs.assetsId();
+        return accountId() == rhs.accountId() and assetsId() == rhs.assetsId()
+            and pager() == rhs.pager();
       }
     };
 

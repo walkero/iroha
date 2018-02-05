@@ -23,8 +23,10 @@
 #include <boost/range/algorithm/for_each.hpp>
 #include <boost/range/irange.hpp>
 
+#include "common/types.hpp"
 #include "datetime/time.hpp"
 #include "primitive.pb.h"
+#include "queries.pb.h"
 
 class ValidatorsTest : public ::testing::Test {
  public:
@@ -69,6 +71,16 @@ class ValidatorsTest : public ::testing::Test {
     field_setters["description"] = setString("");
     field_setters["amount"] = [&](auto refl, auto msg, auto field) {
       refl->MutableMessage(msg, field)->CopyFrom(amount);
+    };
+    field_setters["assets_id"] = [this](auto refl, auto msg, auto field) {
+      std::for_each(assets_id.begin(),
+                    assets_id.end(),
+                    [refl, msg, field](auto const &asset_id) {
+                      refl->AddString(msg, field, asset_id);
+                    });
+    };
+    field_setters["pager"] = [this](auto refl, auto msg, auto field) {
+      refl->MutableMessage(msg, field)->CopyFrom(pager);
     };
   }
 
@@ -161,6 +173,8 @@ class ValidatorsTest : public ::testing::Test {
   uint8_t precision;
   iroha::protocol::Amount amount;
   decltype(iroha::time::now()) created_time;
+  std::vector<std::string> assets_id;
+  iroha::protocol::Pager pager;
 
   // List all used fields in commands
   std::unordered_map<
