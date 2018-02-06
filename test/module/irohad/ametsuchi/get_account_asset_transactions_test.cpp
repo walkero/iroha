@@ -199,7 +199,7 @@ TEST_F(GetAccountAssetTransactionsTest, PartsOfTxsWhenPagerLimit) {
  */
 TEST_F(GetAccountAssetTransactionsTest,
        AllTxsWhenInsertedTxsIsLessThanPagerLimit) {
-  const auto pager = Pager{iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash256_t{}, MAX_PAGER_LIMIT};
 
   auto wrapper = make_test_subscriber<EqualToList>(
       blocks->getAccountAssetTransactions(ALICE_ID, {IRH_ASSET_ID}, pager),
@@ -218,7 +218,7 @@ TEST_F(GetAccountAssetTransactionsTest,
  * destination id.
  */
 TEST_F(GetAccountAssetTransactionsTest, MultipleAssetId) {
-  const auto pager = Pager{iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash256_t{}, MAX_PAGER_LIMIT};
 
   auto wrapper = make_test_subscriber<EqualToList>(
       blocks->getAccountAssetTransactions(
@@ -238,7 +238,7 @@ TEST_F(GetAccountAssetTransactionsTest, MultipleAssetId) {
  *       Retrieving transactions from newer to older transactions.
  */
 TEST_F(GetAccountAssetTransactionsTest, SpecificPagerTxHash) {
-  const auto pager = Pager{iroha::hash(given_txs[2]), Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash(given_txs[2]), MAX_PAGER_LIMIT};
 
   auto wrapper1 = make_test_subscriber<EqualToList>(
       blocks->getAccountAssetTransactions(ALICE_ID, {IRH_ASSET_ID}, pager),
@@ -255,7 +255,7 @@ TEST_F(GetAccountAssetTransactionsTest, SpecificPagerTxHash) {
  * @then No transactions can be retrieved.
  */
 TEST_F(GetAccountAssetTransactionsTest, EmptyAssetId) {
-  const auto pager = Pager{iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash256_t{}, MAX_PAGER_LIMIT};
 
   auto wrapper = make_test_subscriber<CallExact>(
       blocks->getAccountAssetTransactions(ALICE_ID, {}, pager), 0);
@@ -271,7 +271,7 @@ TEST_F(GetAccountAssetTransactionsTest, EmptyAssetId) {
  */
 TEST_F(GetAccountAssetTransactionsTest, EmptyStorage) {
   storage->dropStorage();
-  const auto pager = Pager{iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash256_t{}, MAX_PAGER_LIMIT};
 
   auto wrapper = make_test_subscriber<CallExact>(
       blocks->getAccountAssetTransactions(ALICE_ID, {IRH_ASSET_ID}, pager), 0);

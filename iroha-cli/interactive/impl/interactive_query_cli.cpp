@@ -21,9 +21,9 @@
 #include <fstream>
 #include "byteutils.hpp"
 #include "client.hpp"
+#include "crypto/keys_manager_impl.hpp"
 #include "cryptography/ed25519_sha3_impl/internal/ed25519_impl.hpp"
 #include "cryptography/ed25519_sha3_impl/internal/sha3_hash.hpp"
-#include "crypto/keys_manager_impl.hpp"
 #include "datetime/time.hpp"
 #include "grpc_response_handler.hpp"
 #include "model/converters/json_query_factory.hpp"
@@ -75,7 +75,8 @@ namespace iroha_cli {
           {GET_ACC, &InteractiveQueryCli::parseGetAccount},
           {GET_ACC_AST, &InteractiveQueryCli::parseGetAccountAssets},
           {GET_ACC_TX, &InteractiveQueryCli::parseGetAccountTransactions},
-          {GET_ACC_AST_TX, &InteractiveQueryCli::parseGetAccountAssetTransactions},
+          {GET_ACC_AST_TX,
+           &InteractiveQueryCli::parseGetAccountAssetTransactions},
           {GET_TX, &InteractiveQueryCli::parseGetTransactions},
           {GET_ACC_SIGN, &InteractiveQueryCli::parseGetSignatories},
           {GET_ROLE_PERM, &InteractiveQueryCli::parseGetRolePermissions},
@@ -172,71 +173,67 @@ namespace iroha_cli {
           local_time_, creator_, counter_, account_id, asset_id);
     }
 
-    nonstd::optional<iroha::model::Pager> InteractiveQueryCli::parsePager(
+    iroha::model::Pager InteractiveQueryCli::parsePager(
         const std::string &encoded_tx_hash, const std::string &limit_str) {
-      return nonstd::make_optional<iroha::model::Pager>() |
-             [&encoded_tx_hash](iroha::model::Pager pager)
-               -> nonstd::optional<iroha::model::Pager> {
-               /**
-                * Use '-' as the argument of tx_hash to specify that
-                * the hash is empty because interactive cli splits
-                * arguments by space.
-                */
-               const auto PAGER_TX_HASH_EMPTY = "-";
-               if (encoded_tx_hash == PAGER_TX_HASH_EMPTY) {
-                 pager.tx_hash.fill(0);
-               } else {
-                 const auto decoded_hash =
-                   iroha::hexstringToBytestring(encoded_tx_hash);
-                 if (not decoded_hash) {
-                   return nonstd::nullopt;
-                 }
-                 pager.tx_hash = iroha::hash256_t::from_string(*decoded_hash);
-               }
-               return pager;
-             } | [&limit_str](auto pager) -> nonstd::optional<iroha::model::Pager> {
-        try {
-          pager.limit = boost::lexical_cast<decltype(pager.limit)>(limit_str);
-        } catch (...) {
-          return nonstd::nullopt;
+      iroha::model::Pager pager;
+      if (encoded_tx_hash.empty()) {
+        pager.tx_hash.fill(0);
+      } else {
+        const auto decoded_hash = iroha::hexstringToBytestring(encoded_tx_hash);
+        if (decoded_hash) {
+          pager.tx_hash = iroha::hash256_t::from_string(*decoded_hash);
+        } else {
+          log_->warn(
+              "Specified hash size is invalid. Set empty hash as "
+              "default");
+          pager.tx_hash.fill(0);
         }
-        return pager;
-      };
+      }
+      try {
+        pager.limit = boost::lexical_cast<decltype(pager.limit)>(limit_str);
+      } catch (...) {
+        log_->warn(
+            "Specified tx limit is invalid. Set {} (max size) as default",
+            MAX_PAGER_LIMIT);
+        pager.limit = MAX_PAGER_LIMIT;
+      }
+      return pager;
     }
 
     std::shared_ptr<iroha::model::Query>
     InteractiveQueryCli::parseGetAccountTransactions(QueryParams params) {
-      /// TODO 01/11/17 motxx - Make interactive-cli use named arguments.
-      auto ret =
-        parsePager(params[1], params[2]) | [this, &params](auto pager) {
-          return generator_.generateGetAccountTransactions(
-            local_time_, creator_, counter_, params[0], pager);
-        };
-      return ret.value_or(nullptr);
+      return generator_.generateGetAccountTransactions(
+          local_time_,
+          creator_,
+          counter_,
+          params[0],
+          parsePager(params[1], params[2]));
     }
 
     std::shared_ptr<iroha::model::Query>
     InteractiveQueryCli::parseGetAccountAssetTransactions(QueryParams params) {
-      auto ret =
-        parsePager(params[2], params[3]) | [this, &params](auto pager) {
-          std::vector<std::string> assets;
-          boost::algorithm::split(assets, params[1], boost::is_any_of(","));
-          return generator_.generateGetAccountAssetTransactions(
-            local_time_, creator_, counter_, params[0], assets, pager);
-        };
-      return ret.value_or(nullptr);
+      std::vector<std::string> assets;
+      boost::algorithm::split(assets, params[1], boost::is_any_of(","));
+      return generator_.generateGetAccountAssetTransactions(
+          local_time_,
+          creator_,
+          counter_,
+          params[0],
+          assets,
+          parsePager(params[2], params[3]));
     }
 
     std::shared_ptr<iroha::model::Query>
     InteractiveQueryCli::parseGetTransactions(QueryParams params) {
       // Parser definition: hash1 hash2 ...
       GetTransactions::TxHashCollectionType tx_hashes;
-      std::for_each(params.begin(), params.end(), [&tx_hashes](auto const& hex_hash){
-        if (auto opt =
-          iroha::hexstringToArray<GetTransactions::TxHashType::size()>(hex_hash)) {
-          tx_hashes.push_back(*opt);
-        }
-      });
+      std::for_each(
+          params.begin(), params.end(), [&tx_hashes](auto const &hex_hash) {
+            if (auto opt = iroha::hexstringToArray<
+                    GetTransactions::TxHashType::size()>(hex_hash)) {
+              tx_hashes.push_back(*opt);
+            }
+          });
       return generator_.generateGetTransactions(
           local_time_, creator_, counter_, tx_hashes);
     }
@@ -252,7 +249,8 @@ namespace iroha_cli {
         QueryParams params) {
       auto asset_id = params[0];
       auto query = std::make_shared<GetAssetInfo>(asset_id);
-      //TODO 26/09/17 grimadas: remove duplicated code and move setQueryMetaData calls to private method IR-508 #goodfirstissue
+      // TODO 26/09/17 grimadas: remove duplicated code and move
+      // setQueryMetaData calls to private method IR-508 #goodfirstissue
       generator_.setQueryMetaData(query, local_time_, creator_, counter_);
       return query;
     }

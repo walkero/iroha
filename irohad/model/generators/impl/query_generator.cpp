@@ -83,7 +83,7 @@ namespace iroha {
         return query;
       }
 
-      optional_ptr<GetAccountTransactions>
+      std::shared_ptr<GetAccountTransactions>
       QueryGenerator::generateGetAccountTransactions(
           ts64_t timestamp, const std::string& creator,
           uint64_t query_counter, const std::string& account_id,
@@ -97,7 +97,7 @@ namespace iroha {
         return query;
       }
 
-      optional_ptr<GetAccountAssetTransactions>
+      std::shared_ptr<GetAccountAssetTransactions>
       QueryGenerator::generateGetAccountAssetTransactions(
           ts64_t timestamp, const std::string& creator,
           uint64_t query_counter, const std::string& account_id,
