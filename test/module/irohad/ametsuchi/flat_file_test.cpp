@@ -59,7 +59,7 @@ class BlStore_Test : public ::testing::Test {
 };
 
 TEST_F(BlStore_Test, Read_Write_Test) {
-  int n = FlatFile::FIRST_BLOCK_AT;
+  size_t n = FlatFile::FIRST_BLOCK_AT;
   auto store = FlatFile::create(block_store_path);
   ASSERT_TRUE(store);
   auto bl_store = std::move(*store);
@@ -80,7 +80,7 @@ TEST_F(BlStore_Test, Read_Write_Test) {
  * @then new block storage has all blocks from the folder
  */
 TEST_F(BlStore_Test, BlockStoreInitializationFromNonemptyFolder) {
-  int n = FlatFile::FIRST_BLOCK_AT;
+  size_t n = FlatFile::FIRST_BLOCK_AT;
   uint64_t total1 = 0u;
   {
     auto store = FlatFile::create(block_store_path);
@@ -144,7 +144,7 @@ TEST_F(BlStore_Test, WriteThenReadSequential) {
   ASSERT_TRUE(s);
   auto bs = std::move(*s);
 
-  for (uint8_t i = 0x00 + FlatFile::FIRST_BLOCK_AT; i < 0xff; i++) {
+  for (size_t i = 0x00 + FlatFile::FIRST_BLOCK_AT; i < 0xff; i++) {
     auto v = std::vector<uint8_t>(16, i);
     auto total = bs->last_id();
     ASSERT_TRUE(bs->add(i, v)) << "can not add block";

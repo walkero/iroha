@@ -53,7 +53,7 @@ namespace iroha {
         const std::string &path) {
       auto log_ = logger::log("FlatFile");
 
-      if (!FlatFile::init_directory(path)) {
+      if (not FlatFile::init_directory(path)) {
         return boost::none;
       }
 
