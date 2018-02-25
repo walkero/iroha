@@ -158,20 +158,20 @@ namespace iroha {
 
     bool FlatFile::dropAll() {
       int ret = 0;
-      nudb::error_code ec;
 
-      auto try_erase = [this](const std::string &path, auto &ec) {
+      auto try_erase = [this](const std::string &path) {
+        nudb::error_code ec;
         nudb::erase_file(path, ec);
         if (ec) {
-          log_->error("can't erase file {}", path);
+          log_->error("can't erase file {}, reason: {}", path, ec.message());
           return 1;
         }
         return 0;
       };
 
-      ret &= try_erase(db_->key_path(), ec);
-      ret &= try_erase(db_->log_path(), ec);
-      ret &= try_erase(db_->dat_path(), ec);
+      ret &= try_erase(db_->key_path());
+      ret &= try_erase(db_->log_path());
+      ret &= try_erase(db_->dat_path());
 
       current_id_.store(0);
 
