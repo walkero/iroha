@@ -169,9 +169,9 @@ namespace iroha {
         return 0;
       };
 
-      ret &= try_erase(db_->key_path());
-      ret &= try_erase(db_->log_path());
-      ret &= try_erase(db_->dat_path());
+      ret |= try_erase(db_->key_path());
+      ret |= try_erase(db_->log_path());
+      ret |= try_erase(db_->dat_path());
 
       current_id_.store(0);
 
