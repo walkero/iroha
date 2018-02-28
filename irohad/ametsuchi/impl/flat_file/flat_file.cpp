@@ -28,7 +28,7 @@ namespace iroha {
 
     /** implementation **/
 
-    bool FlatFile::init_directory(const std::string &path) {
+    bool FlatFile::initDirectory(const std::string &path) {
       auto log_ = logger::log("init_directory()");
 
       // first, check if directory exists. if not -- create.
@@ -53,7 +53,7 @@ namespace iroha {
         const std::string &path) {
       auto log_ = logger::log("FlatFile");
 
-      if (not FlatFile::init_directory(path)) {
+      if (not FlatFile::initDirectory(path)) {
         return boost::none;
       }
 
@@ -101,7 +101,7 @@ namespace iroha {
       ec.clear();
 
       // begin initialization
-      auto total_blocks = FlatFile::count_blocks(*db, ec);
+      auto total_blocks = FlatFile::countBlocks(*db, ec);
       // TODO(warchant): IR-1017 validate blocks during initialization
       if (ec != nudb::error::key_not_found) {
         // cound_blocks searches for the last empty block sequentially, and ends
@@ -178,10 +178,10 @@ namespace iroha {
       return ret == 0;
     }
 
-    uint32_t FlatFile::count_blocks(nudb::store &db, nudb::error_code &ec) {
+    uint32_t FlatFile::countBlocks(nudb::store &db, nudb::error_code &ec) {
       auto log_ = logger::log("FlatFile::count_blocks");
 
-      FlatFile::Identifier current = FIRST_BLOCK_AT;
+      FlatFile::Identifier current = kFirstBlockAt;
 
       bool found_last = false;
 

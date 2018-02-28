@@ -89,7 +89,7 @@ namespace iroha {
 
       FlatFile &operator=(FlatFile &&rhs) = delete;
 
-      static constexpr size_t FIRST_BLOCK_AT{1};
+      static constexpr size_t kFirstBlockAt{1};
 
      private:
       //< arbitrary number, app-specific
@@ -98,9 +98,9 @@ namespace iroha {
       //< load factor for basket
       static constexpr float load_factor_{0.5f};
 
-      static uint32_t count_blocks(nudb::store &db, nudb::error_code &ec);
+      static uint32_t countBlocks(nudb::store &db, nudb::error_code &ec);
 
-      static bool init_directory(const std::string &path);
+      static bool initDirectory(const std::string &path);
 
       std::unique_ptr<nudb::store> db_;
 
