@@ -21,6 +21,7 @@
 #include "backend/protobuf/from_old_model.hpp"
 #include "framework/test_subscriber.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_fixture.hpp"
+#include "ametsuchi/impl/block_storage_nudb.hpp"
 #include "module/shared_model/builders/protobuf/test_block_builder.hpp"
 #include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
 
@@ -33,7 +34,8 @@ namespace iroha {
       void SetUp() override {
         AmetsuchiTest::SetUp();
 
-        auto tmp = FlatFile::create(block_store_path);
+        // TODO(warchant): BlockStorage should be inside AmetushiTest::SetUp()
+        auto tmp = BlockStorageNuDB::create(block_store_path);
         ASSERT_TRUE(tmp);
         file = std::move(*tmp);
 
@@ -70,7 +72,7 @@ namespace iroha {
       std::vector<shared_model::crypto::Hash> tx_hashes;
       std::shared_ptr<BlockQuery> blocks;
       std::shared_ptr<BlockIndex> index;
-      std::unique_ptr<FlatFile> file;
+      std::unique_ptr<BlockStorage> file;
       std::string creator1 = "user1@test";
       std::string creator2 = "user2@test";
       std::string creator3 = "user3@test";
