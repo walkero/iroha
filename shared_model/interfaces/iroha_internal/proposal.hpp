@@ -36,12 +36,14 @@ namespace shared_model {
      public:
       template <class T>
       using w = detail::PolymorphicWrapper<T>;
+      template <class T>
+      using rw = std::reference_wrapper<const T>;
       using TransactionContainer = std::vector<w<interface::Transaction>>;
 
       /**
        * @return transactions
        */
-      virtual const std::vector<w<Transaction>> &transactions() const = 0;
+      virtual const std::vector<rw<Transaction>> &transactions() const = 0;
 
       /**
        * @return the height
@@ -60,7 +62,7 @@ namespace shared_model {
                               std::vector<iroha::model::Transaction>{},
                               [](auto &&vec, const auto &tx) {
                                 std::unique_ptr<iroha::model::Transaction> ptr(
-                                    tx->makeOldModel());
+                                    tx.get().makeOldModel());
                                 vec.emplace_back(*ptr);
                                 return std::forward<decltype(vec)>(vec);
                               });
@@ -78,7 +80,7 @@ namespace shared_model {
             .append("transactions")
             .appendAll(
                 transactions(),
-                [](auto &transaction) { return transaction->toString(); })
+                [](auto &transaction) { return transaction.get().toString(); })
             .finalize();
       }
     };

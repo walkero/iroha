@@ -59,7 +59,7 @@ namespace shared_model {
 
         validateHeight(reason, prop.height());
         for (const auto &tx : prop.transactions()) {
-          validateTransaction(reason, *tx);
+          validateTransaction(reason, tx);
         }
         if (not reason.second.empty()) {
           answer.addReason(std::move(reason));

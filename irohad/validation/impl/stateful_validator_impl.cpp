@@ -58,9 +58,9 @@ namespace iroha {
       // Filter only valid transactions
       auto filter = [&temporaryWsv, checking_transaction](auto &acc,
                                                           const auto &tx) {
-        std::unique_ptr<model::Transaction> old_tx(tx->makeOldModel());
+        std::unique_ptr<model::Transaction> old_tx(tx.get().makeOldModel());
         auto answer =
-            temporaryWsv.apply(*(tx.operator->()), checking_transaction);
+            temporaryWsv.apply(tx, checking_transaction);
         if (answer) {
           acc.push_back(tx);
         }
@@ -77,9 +77,9 @@ namespace iroha {
       // transport
       auto valid_proto_txs =
           valid_txs
-          | boost::adaptors::transformed([](const auto &polymorphic_tx) {
+          | boost::adaptors::transformed([](const auto &ref_tx) {
               return static_cast<const shared_model::proto::Transaction &>(
-                  *polymorphic_tx.operator->());
+                  ref_tx.get());
             });
       auto validated_proposal = shared_model::proto::ProposalBuilder()
                                     .createdTime(proposal.created_time())

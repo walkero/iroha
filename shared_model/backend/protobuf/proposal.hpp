@@ -39,7 +39,10 @@ namespace shared_model {
                                                 Proposal> {
       template <class T>
       using w = detail::PolymorphicWrapper<T>;
+      template <class T>
+      using rw = std::reference_wrapper<const T>;
       using TransactionContainer = std::vector<w<interface::Transaction>>;
+      using TransactionReferenceContainer = std::vector<rw<interface::Transaction>>;
 
      public:
       template <class ProposalType>
@@ -50,8 +53,8 @@ namespace shared_model {
 
       Proposal(Proposal &&o) noexcept : Proposal(std::move(o.proto_)) {}
 
-      const TransactionContainer &transactions() const override {
-        return *transactions_;
+      const TransactionReferenceContainer &transactions() const override {
+        return *rTransactions_;
       }
 
       interface::types::TimestampType created_time() const override {
@@ -76,6 +79,14 @@ namespace shared_model {
                                  TransactionContainer{},
                                  [](auto &&vec, const auto &tx) {
                                    vec.emplace_back(new proto::Transaction(tx));
+                                   return std::forward<decltype(vec)>(vec);
+                                 });
+      }};
+      const Lazy<TransactionReferenceContainer> rTransactions_{[this] {
+        return boost::accumulate(*transactions_,
+                                 TransactionReferenceContainer{},
+                                 [](auto &&vec, const auto &tx) {
+                                   vec.emplace_back(*tx);
                                    return std::forward<decltype(vec)>(vec);
                                  });
       }};
