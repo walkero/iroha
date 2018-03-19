@@ -74,9 +74,9 @@ namespace iroha {
 
       // Save proposal height to the persistent storage.
       // In case of restart it reloads state.
-      persistent_state_->saveProposalHeight(proposal_height);
-
-      publishProposal(std::move(proposal));
+      if (persistent_state_->saveProposalHeight(proposal_height)) {
+        publishProposal(std::move(proposal));
+      }
     }
 
     void OrderingServiceImpl::publishProposal(
