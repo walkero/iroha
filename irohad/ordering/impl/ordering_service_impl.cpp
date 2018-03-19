@@ -83,11 +83,12 @@ namespace iroha {
         std::unique_ptr<shared_model::interface::Proposal> proposal) {
       std::vector<std::string> peers;
 
-      auto lst = wsv_->getLedgerPeers().value();
-      for (const auto &peer : lst) {
-        peers.push_back(peer->address());
-      }
-      transport_->publishProposal(std::move(proposal), peers);
+      wsv_->getLedgerPeers() | [&](auto &lst) {
+        for (const auto &peer : lst) {
+          peers.push_back(peer->address());
+        }
+        transport_->publishProposal(std::move(proposal), peers);
+      };
     }
 
     void OrderingServiceImpl::updateTimer() {
