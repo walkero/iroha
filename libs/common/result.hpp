@@ -172,6 +172,14 @@ namespace iroha {
               typename EContainer = std::shared_ptr<E>>
     using PolymorphicResult = Result<VContainer, EContainer>;
 
+    /**
+     * PolymorphicValueResult is a case of polymorphic result where only value
+     * should express polymorphic properties. Error is stored directly inside
+     * result.
+     */
+    template <typename V, typename E, typename VContainer = std::shared_ptr<V>>
+    using PolymorphicValueResult = PolymorphicResult<V, E, VContainer, E>;
+
   }  // namespace expected
 }  // namespace iroha
 #endif  // IROHA_RESULT_HPP

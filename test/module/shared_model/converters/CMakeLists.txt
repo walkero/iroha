@@ -22,3 +22,11 @@ AddTest(json_proto_converter_test
 target_link_libraries(json_proto_converter_test
     shared_model_proto_backend
     )
+
+AddTest(json_conversion_test
+        json_conversion_test.cpp
+        )
+
+target_link_libraries(json_conversion_test
+        shared_model_proto_backend
+        )
