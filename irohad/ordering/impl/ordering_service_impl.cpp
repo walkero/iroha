@@ -16,6 +16,8 @@
  */
 
 #include "ordering/impl/ordering_service_impl.hpp"
+#include <algorithm>
+#include <iterator>
 #include "ametsuchi/ordering_service_persistent_state.hpp"
 #include "backend/protobuf/transaction.hpp"
 #include "builders/protobuf/proposal.hpp"
@@ -74,21 +76,27 @@ namespace iroha {
 
       // Save proposal height to the persistent storage.
       // In case of restart it reloads state.
-      if (persistent_state_->saveProposalHeight(proposal_height)) {
+      if (not persistent_state_->saveProposalHeight(proposal_height)) {
         publishProposal(std::move(proposal));
+      } else {
+        log_->warn(
+            "Proposal height cannot be saved. Skipping proposal publish");
       }
     }
 
     void OrderingServiceImpl::publishProposal(
         std::unique_ptr<shared_model::interface::Proposal> proposal) {
-      std::vector<std::string> peers;
-
-      wsv_->getLedgerPeers() | [&](auto &lst) {
-        for (const auto &peer : lst) {
-          peers.push_back(peer->address());
-        }
-        transport_->publishProposal(std::move(proposal), peers);
-      };
+      auto peers = wsv_->getLedgerPeers();
+      if (peers) {
+        std::vector<std::string> addresses;
+        std::transform(peers->begin(),
+                       peers->end(),
+                       std::back_inserter(addresses),
+                       [](auto &p) { return p->address(); });
+        transport_->publishProposal(std::move(proposal), addresses);
+      } else {
+        log_->error("Cannot get the peer list");
+      }
     }
 
     void OrderingServiceImpl::updateTimer() {
