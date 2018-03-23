@@ -17,28 +17,19 @@
 
 #include <grpc++/grpc++.h>
 
+#include "backend/protobuf/common_objects/peer.hpp"
+#include "builders/protobuf/common_objects/proto_peer_builder.hpp"
 #include "logger/logger.hpp"
-#include "network/ordering_service.hpp"
-
 #include "module/irohad/ametsuchi/ametsuchi_mocks.hpp"
 #include "module/irohad/network/network_mocks.hpp"
-
-#include "ametsuchi/ordering_service_persistent_state.hpp"
-#include "backend/protobuf/common_objects/peer.hpp"
-#include "builders/common_objects/peer_builder.hpp"
-#include "builders/protobuf/common_objects/proto_peer_builder.hpp"
-#include "mock_ordering_service_persistent_state.hpp"
+#include "module/irohad/ordering/mock_ordering_service_persistent_state.hpp"
 #include "module/shared_model/builders/protobuf/test_proposal_builder.hpp"
 #include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
-#include "ordering/impl/ordering_gate_impl.hpp"
-#include "ordering/impl/ordering_gate_transport_grpc.hpp"
 #include "ordering/impl/ordering_service_impl.hpp"
 #include "ordering/impl/ordering_service_transport_grpc.hpp"
-#include "validators/field_validator.hpp"
 
 using namespace iroha;
 using namespace iroha::ordering;
-using namespace iroha::model;
 using namespace iroha::network;
 using namespace iroha::ametsuchi;
 using namespace std::chrono_literals;
@@ -49,8 +40,6 @@ using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
 using ::testing::_;
-
-using wPeer = std::shared_ptr<shared_model::interface::Peer>;
 
 static logger::Logger log_ = logger::testLog("OrderingService");
 
@@ -77,13 +66,11 @@ class MockOrderingServiceTransport : public network::OrderingServiceTransport {
 class OrderingServiceTest : public ::testing::Test {
  public:
   OrderingServiceTest() {
-    peer = std::shared_ptr<shared_model::interface::Peer>(
-        shared_model::proto::PeerBuilder()
-            .address(address)
-            .pubkey(shared_model::interface::types::PubkeyType(
-                std::string(32, '0')))
-            .build()
-            .copy());
+    peer = clone(shared_model::proto::PeerBuilder()
+                     .address(address)
+                     .pubkey(shared_model::interface::types::PubkeyType(
+                         std::string(32, '0')))
+                     .build());
   }
 
   void SetUp() override {
@@ -159,7 +146,6 @@ TEST_F(OrderingServiceTest, ValidWhenProposalSizeStrategy) {
   auto key = shared_model::crypto::PublicKey(peer->pubkey().toString());
   auto tmp = builder.address(peer->address()).pubkey(key).build();
 
-  wPeer w_peer(tmp.copy());
   EXPECT_CALL(*wsv, getLedgerPeers())
       .WillRepeatedly(Return(std::vector<decltype(peer)>{peer}));
 
@@ -182,7 +168,6 @@ TEST_F(OrderingServiceTest, ValidWhenTimerStrategy) {
   auto key = shared_model::crypto::PublicKey(peer->pubkey().toString());
   auto tmp = builder.address(peer->address()).pubkey(key).build();
 
-  wPeer w_peer(tmp.copy());
   EXPECT_CALL(*wsv, getLedgerPeers())
       .WillRepeatedly(Return(std::vector<decltype(peer)>{peer}));
 
