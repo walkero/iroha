@@ -215,3 +215,26 @@ TEST_F(OrderingServiceTest, ValidWhenTimerStrategy) {
   ordering_service->onTransaction(empty_tx());
   cv.wait_for(lk, 10s);
 }
+
+/**
+ * @given Ordering service and the persistent state that cannot save proposals
+ * @when onTransaction is called
+ * @then no published proposal
+ */
+TEST_F(OrderingServiceTest, BrokenPersistentState) {
+  const size_t max_proposal = 1;
+  const size_t commit_delay = 100;
+  EXPECT_CALL(*fake_persistent_state, loadProposalHeight())
+      .Times(1)
+      .WillOnce(Return(boost::optional<size_t>(1)));
+  EXPECT_CALL(*fake_persistent_state, saveProposalHeight(2))
+      .Times(1)
+      .WillRepeatedly(Return(false));
+
+  auto ordering_service = std::make_shared<OrderingServiceImpl>(
+      wsv, max_proposal, commit_delay, fake_transport, fake_persistent_state);
+  ordering_service->onTransaction(empty_tx());
+
+  std::unique_lock<std::mutex> lk(m);
+  cv.wait_for(lk, 2s);
+}
