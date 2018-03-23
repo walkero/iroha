@@ -25,18 +25,16 @@
 
 #include "ametsuchi/ordering_service_persistent_state.hpp"
 #include "backend/protobuf/common_objects/peer.hpp"
-#include "mock_ordering_service_persistent_state.hpp"
 #include "builders/common_objects/peer_builder.hpp"
 #include "builders/protobuf/common_objects/proto_peer_builder.hpp"
+#include "mock_ordering_service_persistent_state.hpp"
+#include "module/shared_model/builders/protobuf/test_proposal_builder.hpp"
+#include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
 #include "ordering/impl/ordering_gate_impl.hpp"
 #include "ordering/impl/ordering_gate_transport_grpc.hpp"
 #include "ordering/impl/ordering_service_impl.hpp"
 #include "ordering/impl/ordering_service_transport_grpc.hpp"
 #include "validators/field_validator.hpp"
-
-#include "builders/protobuf/common_objects/proto_peer_builder.hpp"
-#include "module/shared_model/builders/protobuf/test_proposal_builder.hpp"
-#include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
 
 using namespace iroha;
 using namespace iroha::ordering;
@@ -45,12 +43,12 @@ using namespace iroha::network;
 using namespace iroha::ametsuchi;
 using namespace std::chrono_literals;
 
-using ::testing::_;
 using ::testing::AtLeast;
 using ::testing::DoAll;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Return;
+using ::testing::_;
 
 using wPeer = std::shared_ptr<shared_model::interface::Peer>;
 
@@ -136,8 +134,9 @@ TEST_F(OrderingServiceTest, ValidWhenProposalSizeStrategy) {
   const size_t max_proposal = 5;
   const size_t commit_delay = 1000;
 
-  EXPECT_CALL(*fake_persistent_state, saveProposalHeight(_)).Times(2);
-
+  EXPECT_CALL(*fake_persistent_state, saveProposalHeight(_))
+      .Times(2)
+      .WillRepeatedly(Return(true));
   EXPECT_CALL(*fake_persistent_state, loadProposalHeight())
       .Times(1)
       .WillOnce(Return(boost::optional<size_t>(2)));
@@ -175,8 +174,9 @@ TEST_F(OrderingServiceTest, ValidWhenProposalSizeStrategy) {
 TEST_F(OrderingServiceTest, ValidWhenTimerStrategy) {
   // Init => proposal timer 400 ms => 10 tx by 50 ms => 2 proposals in 1 second
 
-  EXPECT_CALL(*fake_persistent_state, saveProposalHeight(_)).Times(2);
-
+  EXPECT_CALL(*fake_persistent_state, saveProposalHeight(_))
+      .Times(2)
+      .WillRepeatedly(Return(true));
   shared_model::proto::PeerBuilder builder;
 
   auto key = shared_model::crypto::PublicKey(peer->pubkey().toString());

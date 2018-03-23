@@ -76,7 +76,7 @@ namespace iroha {
 
       // Save proposal height to the persistent storage.
       // In case of restart it reloads state.
-      if (not persistent_state_->saveProposalHeight(proposal_height)) {
+      if (persistent_state_->saveProposalHeight(proposal_height)) {
         publishProposal(std::move(proposal));
       } else {
         // TODO(@l4l) 23/03/18: publish proposal independant of psql status
