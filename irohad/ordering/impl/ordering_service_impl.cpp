@@ -36,10 +36,17 @@ namespace iroha {
             persistent_state)
         : wsv_(wsv),
           max_size_(max_size),
-          delay_milliseconds_(delay_milliseconds),
           transport_(transport),
-          persistent_state_(persistent_state) {
-      updateTimer();
+          persistent_state_(persistent_state),
+          updater([this, delay_milliseconds] {
+            while (this->is_active) {
+              this->updateTimer();
+              std::this_thread::sleep_for(
+                  std::chrono::milliseconds(delay_milliseconds));
+            }
+          }),
+          is_active(false) {
+      start();
       log_ = logger::log("OrderingServiceImpl");
 
       // restore state of ordering service from persistent storage
@@ -52,7 +59,6 @@ namespace iroha {
       log_->info("Queue size is {}", queue_.unsafe_size());
 
       if (queue_.unsafe_size() >= max_size_) {
-        handle.unsubscribe();
         updateTimer();
       }
     }
@@ -106,14 +112,26 @@ namespace iroha {
       if (not queue_.empty()) {
         this->generateProposal();
       }
-      timer = rxcpp::observable<>::timer(
-          std::chrono::milliseconds(delay_milliseconds_));
-      handle = timer.subscribe_on(rxcpp::observe_on_new_thread())
-                   .subscribe([this](auto) { this->updateTimer(); });
+    }
+
+    void OrderingServiceImpl::start() {
+      if (is_active && handle != nullptr) {
+        return;
+      }
+      is_active = true;
+      handle = std::make_unique<std::thread>(updater);
+    }
+
+    void OrderingServiceImpl::stop() {
+      is_active = false;
+      if (handle) {
+        handle->join();
+      }
+      handle = nullptr;
     }
 
     OrderingServiceImpl::~OrderingServiceImpl() {
-      handle.unsubscribe();
+      stop();
     }
   }  // namespace ordering
 }  // namespace iroha

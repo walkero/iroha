@@ -90,8 +90,12 @@ namespace iroha {
        */
       void updateTimer();
 
-      rxcpp::observable<long> timer;
-      rxcpp::composite_subscription handle;
+      /// Starts timer updating
+      void start();
+
+      /// Stops timer updating
+      void stop();
+
       std::shared_ptr<ametsuchi::PeerQuery> wsv_;
 
       tbb::concurrent_queue<
@@ -103,10 +107,6 @@ namespace iroha {
        */
       const size_t max_size_;
 
-      /**
-       *  wait for specified time if queue is empty
-       */
-      const size_t delay_milliseconds_;
       std::shared_ptr<network::OrderingServiceTransport> transport_;
 
       /**
@@ -122,6 +122,10 @@ namespace iroha {
        * the ledger + 1.
        */
       size_t proposal_height;
+
+      const std::function<void()> updater;
+      std::unique_ptr<std::thread> handle;
+      bool is_active;
 
       logger::Logger log_;
     };
