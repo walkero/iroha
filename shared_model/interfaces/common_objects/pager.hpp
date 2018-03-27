@@ -99,7 +99,7 @@ namespace shared_model {
     constexpr Pager::Limit MAX_PAGER_LIMIT = 100;
 
 #ifndef DISABLE_BACKWARD
-    static_assert(MAX_PAGER_LIMIT == iroha::model::Pager::MAX_PAGER_LIMIT,
+    static_assert(MAX_PAGER_LIMIT == iroha::model::MAX_PAGER_LIMIT,
                   "Should be equal to old fashioned model's");
 #endif
   }  // namespace interface

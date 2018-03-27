@@ -41,7 +41,7 @@ using iroha::model::generators::TransactionGenerator;
 using iroha::model::generators::CommandGenerator;
 
 static const auto NO_PAGER = iroha::model::Pager{
-  iroha::hash256_t{}, iroha::model::Pager::MAX_PAGER_LIMIT};
+  iroha::hash256_t{}, iroha::model::MAX_PAGER_LIMIT};
 static const auto DOMAIN_ID = std::string("domain");
 static const auto DOMAIN_USER_DEFAULT_ROLE = std::string("user");
 static const auto ALICE_NAME = std::string("alice");
@@ -151,12 +151,12 @@ TEST_F(GetAccountTransactionsTest, SkipOtherCreatorWhenGetAcctTxsPagerLimit1) {
 /**
  * @brief Valid when num of inserted txs in storage less than pager.limit.
  * @given StorageImpl
- * @when Query alice's transactions with pager.limit = Pager::MAX_PAGER_LIMIT
+ * @when Query alice's transactions with pager.limit = MAX_PAGER_LIMIT
  * @then Alice's transactions can be retrieved.
  */
 TEST_F(GetAccountTransactionsTest,
        AllTxsWhenGetAcctTxsInsNumLessThanPagerLimit) {
-  const auto pager = Pager{iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash256_t{}, MAX_PAGER_LIMIT};
   auto wrapper = make_test_subscriber<EqualToList>(
       blocks->getAccountTransactions(ALICE_ID, pager),
       std::vector<Transaction>{given_txs[3], given_txs[1], given_txs[0]});
@@ -172,7 +172,7 @@ TEST_F(GetAccountTransactionsTest,
  */
 TEST_F(GetAccountTransactionsTest, GetAcctTxsWithPagerHash) {
   const auto pager = Pager{iroha::hash(given_txs[3]),
-                           Pager::MAX_PAGER_LIMIT};
+                           MAX_PAGER_LIMIT};
   auto wrapper = make_test_subscriber<EqualToList>(
       blocks->getAccountTransactions(ALICE_ID, pager),
       std::vector<Transaction>{given_txs[1], given_txs[0]});
@@ -190,7 +190,7 @@ TEST_F(GetAccountTransactionsTest, GetAcctTxsWithPagerHash) {
  * @note A tx which corresponds to pager.tx_hash is excluded in response.
  */
 TEST_F(GetAccountTransactionsTest, GetAcctTxsWithPagerOtherCreatorHash) {
-  const auto pager = Pager{iroha::hash(given_txs[2]), Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{iroha::hash(given_txs[2]), MAX_PAGER_LIMIT};
   auto wrapper1 = make_test_subscriber<EqualToList>(
       blocks->getAccountTransactions(ALICE_ID, pager),
       std::vector<Transaction>{given_txs[1], given_txs[0]});
@@ -209,7 +209,7 @@ TEST_F(GetAccountTransactionsTest,
        RegardsTxHashAsEmptyWhenGetAcctTxsWithInvalidHash) {
   iroha::hash256_t invalid_hash;
   invalid_hash.at(0) = 1;
-  const auto pager = Pager{invalid_hash, Pager::MAX_PAGER_LIMIT};
+  const auto pager = Pager{invalid_hash, MAX_PAGER_LIMIT};
   auto wrapper = make_test_subscriber<EqualToList>(
       blocks->getAccountTransactions(ALICE_ID, pager),
       std::vector<Transaction>{given_txs[3], given_txs[1], given_txs[0]});

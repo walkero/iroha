@@ -68,6 +68,7 @@ namespace iroha_cli {
       const std::string GET_ACC = "get_acc";
       const std::string GET_ACC_AST = "get_acc_ast";
       const std::string GET_ACC_TX = "get_acc_tx";
+      const std::string GET_ACC_AST_TX = "get_acc_ast_tx";
       const std::string GET_TX = "get_tx";
       const std::string GET_ACC_SIGN = "get_acc_sign";
       const std::string GET_ROLES = "get_roles";
@@ -97,6 +98,8 @@ namespace iroha_cli {
           QueryParams params);
       std::shared_ptr<iroha::model::Query> parseGetAccountTransactions(
           QueryParams params);
+      std::shared_ptr<iroha::model::Query> parseGetAccountAssetTransactions(
+          QueryParams params);
       std::shared_ptr<iroha::model::Query> parseGetTransactions(
           QueryParams params);
       std::shared_ptr<iroha::model::Query> parseGetSignatories(
@@ -107,8 +110,8 @@ namespace iroha_cli {
       std::shared_ptr<iroha::model::Query> parseGetAssetInfo(
           QueryParams params);
       // ------ Specific parser ------
-      nonstd::optional<iroha::model::Pager> parsePager(
-          const std::string &encoded_tx_hash, const std::string &limit_str);
+      iroha::model::Pager parsePager(const std::string &encoded_tx_hash,
+                                     const std::string &limit_str);
       // ------ Result parsers -------
       using ResultHandler = bool (InteractiveQueryCli::*)(QueryParams);
       std::unordered_map<QueryName, ResultHandler> result_handlers_;

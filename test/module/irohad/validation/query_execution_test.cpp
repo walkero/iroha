@@ -44,7 +44,7 @@ using namespace iroha::model::generators;
 using namespace framework::test_subscriber;
 
 static const auto NO_PAGER = Pager{
-  iroha::hash256_t{}, Pager::MAX_PAGER_LIMIT};
+  iroha::hash256_t{}, MAX_PAGER_LIMIT};
 
 class QueryValidateExecuteTest : public ::testing::Test {
  public:

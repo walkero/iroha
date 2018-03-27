@@ -39,11 +39,6 @@ namespace iroha {
        */
       uint16_t limit{};
 
-      /**
-       * Max number of limit
-       */
-      static constexpr uint16_t MAX_PAGER_LIMIT = 100;
-
       bool operator==(Pager const &rhs) const {
         return tx_hash == rhs.tx_hash and limit == rhs.limit;
       }
@@ -51,6 +46,11 @@ namespace iroha {
         return not(operator==(rhs));
       }
     };
+
+    /**
+     * Max number of limit
+     */
+    static constexpr uint16_t MAX_PAGER_LIMIT = 100;
   }  // namespace model
 }  // namespace iroha
 #endif  // IROHA_MODEL_QUERY_PAGER_HPP
