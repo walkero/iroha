@@ -80,14 +80,14 @@ bool hasQueryPermission(const std::string &creator,
                // permission
                (creator == target_account
                 and iroha::accountHasPermission(perms_set.value(),
-                                         indiv_permission_id))
+                                                indiv_permission_id))
                or  // 3. Creator has global permission to get any account
                (iroha::accountHasPermission(perms_set.value(),
-                                     all_permission_id))
+                                            all_permission_id))
                or  // 4. Creator has domain permission
                (getDomainFromName(creator) == getDomainFromName(target_account)
                 and iroha::accountHasPermission(perms_set.value(),
-                                         domain_permission_id))));
+                                                domain_permission_id))));
 }
 
 bool QueryProcessingFactory::validate(
