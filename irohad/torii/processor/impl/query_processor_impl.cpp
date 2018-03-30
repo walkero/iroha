@@ -30,7 +30,7 @@ namespace iroha {
         std::shared_ptr<shared_model::interface::Query> qry) {
       auto qpf = model::QueryProcessingFactory(storage_->getWsvQuery(),
                                                storage_->getBlockQuery());
-      auto qpf_response = qpf_->execute(*qry);
+      auto qpf_response = qpf.execute(*qry);
       auto qry_resp =
           std::static_pointer_cast<shared_model::proto::QueryResponse>(
               qpf_response);
