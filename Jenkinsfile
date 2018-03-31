@@ -53,7 +53,7 @@ pipeline {
 
   agent any
   stages {
-    stage ('Stop bad job builds') {
+    stage ('Stop redundant job builds') {
       agent { label 'master' }
       steps {
         script {
