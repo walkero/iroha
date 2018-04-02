@@ -169,7 +169,7 @@ namespace shared_model {
 
       // size of key
       static const size_t public_key_size;
-      static const size_t value_size;
+      static const uint64_t value_size;
       static const size_t description_size;
     };
   }  // namespace validation

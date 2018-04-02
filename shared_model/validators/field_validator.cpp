@@ -47,7 +47,7 @@ namespace shared_model {
     const std::string FieldValidator::role_id_pattern_ = R"#([a-z_0-9]{1,32})#";
 
     const size_t FieldValidator::public_key_size = 32;
-    const size_t FieldValidator::value_size = 4096;
+    const uint64_t FieldValidator::value_size = 4*1024*1024*1024ULL;
     const size_t FieldValidator::description_size = 64;
 
     FieldValidator::FieldValidator(time_t future_gap)
