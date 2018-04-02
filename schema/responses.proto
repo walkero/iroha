@@ -37,6 +37,14 @@ message AccountDetailResponse {
   string detail = 1;
 }
 
+message AccountDetailKeysResponse {
+    repeated string detail = 1;
+}
+
+message AccountDetailValuesResponse {
+    string value = 1;
+}
+
 message AccountResponse {
   Account account = 1;
   repeated string account_roles = 2;
