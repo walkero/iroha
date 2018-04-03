@@ -12,10 +12,10 @@
 //   |            |----Release
 properties([parameters([
   choice(choices: 'Debug\nRelease', description: '', name: 'BUILD_TYPE'),
-  booleanParam(defaultValue: true, description: '', name: 'Linux'),
+  booleanParam(defaultValue: false, description: '', name: 'Linux'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv7'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv8'),
-  booleanParam(defaultValue: true, description: '', name: 'MacOS'),
+  booleanParam(defaultValue: false, description: '', name: 'MacOS'),
   booleanParam(defaultValue: false, description: 'Whether it is a triggered build', name: 'Nightly'),
   booleanParam(defaultValue: false, description: 'Whether build docs or not', name: 'Doxygen'),
   booleanParam(defaultValue: false, description: 'Whether build Java bindings', name: 'JavaBindings'),
@@ -223,7 +223,11 @@ pipeline {
               """
               def testExitCode = sh(script: 'IROHA_POSTGRES_HOST=localhost IROHA_POSTGRES_PORT=5433 cmake --build build --target test', returnStatus: true)
               if (testExitCode != 0) {
+<<<<<<< HEAD
                 currentBuild.currentResult = "UNSTABLE"
+=======
+               currentBuild.result = "UNSTABLE"
+>>>>>>> a94c902... python + java + android bindings
               }
               if ( coverageEnabled ) {
                 sh "cmake --build build --target cppcheck"
