@@ -133,8 +133,9 @@ namespace iroha {
             decltype(f(std::declval<T>()))>::type {
       using return_type = decltype(f(std::declval<T>()));
       return r.match(
-          [&f](const Value<T> &v) { return f(v.value); },
-          [](const Error<E> &e) { return return_type(makeError(e.error)); });
+          [&f](Value<T> &v) {
+            return f(std::forward<decltype(v.value)>(v.value)); },
+          [](Error<E> &e) { return return_type(makeError(e.error)); });
     }
 
     /**

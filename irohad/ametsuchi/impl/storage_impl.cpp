@@ -16,6 +16,7 @@
  */
 
 #include "ametsuchi/impl/storage_impl.hpp"
+#include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include "ametsuchi/impl/flat_file/flat_file.hpp"  // for FlatFile
 #include "ametsuchi/impl/mutable_storage_impl.hpp"
@@ -214,24 +215,71 @@ DROP TABLE IF EXISTS index_by_id_height_asset;
       }
       log_->info("block store created");
 
-      auto postgres_connection =
-          std::make_unique<pqxx::lazyconnection>(postgres_options);
-      try {
-        postgres_connection->activate();
-      } catch (const pqxx::broken_connection &e) {
-        return expected::makeError(
-            (boost::format(kPsqlBroken) % e.what()).str());
+      return createDatabaseIfNotExists(postgres_options) |
+                 [&log_, &block_store](auto &&postgres_connection)
+                 -> expected::Result<ConnectionContext, std::string> {
+        auto wsv_transaction = std::make_unique<pqxx::nontransaction>(
+            *postgres_connection, "Storage");
+        log_->info("transaction to PostgreSQL initialized");
+        return expected::makeValue(
+            ConnectionContext(std::move(*block_store),
+                              std::move(postgres_connection),
+                              std::move(wsv_transaction)));
+      };
+    }
+
+    expected::Result<std::unique_ptr<pqxx::lazyconnection>, std::string>
+    StorageImpl::createDatabaseIfNotExists(std::string &postgres_options) {
+      // parse options
+      std::regex r{R"([^ ]+)"};
+      std::set<std::string> tokens{
+          std::sregex_token_iterator{
+              std::begin(postgres_options), std::end(postgres_options), r},
+          std::sregex_token_iterator{}};
+      std::map<std::string, std::string> options;
+      std::string pg_opt_without_db_name;
+      for (auto &s : tokens) {
+        std::vector<std::string> key_value;
+        boost::split(key_value, s, boost::is_any_of("="));
+        if (key_value.size() != 2) {
+          return expected::makeError("postgres options parse error");
+        }
+        std::string key = key_value.at(0);
+        std::string value = key_value.at(1);
+        if (key.empty() or value.empty()) {
+          return expected::makeError("postgres options parse error");
+        }
+
+        options.insert({key, value});
+        if (key != "dbname") {
+          pg_opt_without_db_name += s + " ";
+        }
       }
-      log_->info("connection to PostgreSQL completed");
 
-      auto wsv_transaction = std::make_unique<pqxx::nontransaction>(
-          *postgres_connection, "Storage");
-      log_->info("transaction to PostgreSQL initialized");
+      if (options.find("dbname") == options.end()) {
+        auto connection =
+            std::make_unique<pqxx::lazyconnection>(postgres_options);
+        try {
+          connection->activate();
+        } catch (const pqxx::broken_connection &e) {
+          return expected::makeError(
+              (boost::format(kPsqlBroken) % e.what()).str());
+        }
+        return expected::makeValue(std::move(connection));
+      }
 
-      return expected::makeValue(
-          ConnectionContext(std::move(*block_store),
-                            std::move(postgres_connection),
-                            std::move(wsv_transaction)));
+      auto temp_connection =
+          std::make_unique<pqxx::lazyconnection>(pg_opt_without_db_name);
+      auto dbname = options.at("dbname");
+      auto transaction =
+          std::make_unique<pqxx::nontransaction>(*temp_connection);
+      auto result = transaction->exec(
+          "SELECT datname FROM pg_catalog.pg_database WHERE datname = "
+          + transaction->quote(dbname));
+      if (result.size() == 0) {
+        transaction->exec("CREATE DATABASE " + dbname);
+      }
+      return expected::makeValue(std::make_unique<pqxx::lazyconnection>(postgres_options));
     }
 
     expected::Result<std::shared_ptr<StorageImpl>, std::string>

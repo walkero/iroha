@@ -20,8 +20,8 @@
 
 #include "ametsuchi/storage.hpp"
 
-#include <cmath>
 #include <boost/optional.hpp>
+#include <cmath>
 #include <pqxx/pqxx>
 #include <shared_mutex>
 #include "logger/logger.hpp"
@@ -48,6 +48,10 @@ namespace iroha {
           std::string block_store_dir, std::string postgres_options);
 
      public:
+      static expected::Result<std::unique_ptr<pqxx::lazyconnection>,
+                              std::string>
+      createDatabaseIfNotExists(std::string &postgres_options);
+
       static expected::Result<std::shared_ptr<StorageImpl>, std::string> create(
           std::string block_store_dir, std::string postgres_connection);
 
@@ -62,7 +66,8 @@ namespace iroha {
        * @param blocks - block for insertion
        * @return true if all blocks are inserted
        */
-      virtual bool insertBlock(const shared_model::interface::Block &block) override;
+      virtual bool insertBlock(
+          const shared_model::interface::Block &block) override;
 
       /**
        * Insert blocks without validation
@@ -70,7 +75,8 @@ namespace iroha {
        * @return true if inserted
        */
       virtual bool insertBlocks(
-          const std::vector<std::shared_ptr<shared_model::interface::Block>> &blocks) override;
+          const std::vector<std::shared_ptr<shared_model::interface::Block>>
+              &blocks) override;
 
       virtual void dropStorage() override;
 

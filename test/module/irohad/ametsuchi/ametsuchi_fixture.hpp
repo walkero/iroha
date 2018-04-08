@@ -40,18 +40,20 @@ namespace iroha {
         auto pg_port = std::getenv("IROHA_POSTGRES_PORT");
         auto pg_user = std::getenv("IROHA_POSTGRES_USER");
         auto pg_pass = std::getenv("IROHA_POSTGRES_PASSWORD");
+        auto pg_dbname = std::getenv("IROHA_POSTGRES_DBNAME");
         if (not pg_host) {
           return;
         }
         std::stringstream ss;
         ss << "host=" << pg_host << " port=" << pg_port << " user=" << pg_user
-           << " password=" << pg_pass;
+           << " password=" << pg_pass << " dbname=" << pg_dbname;
         pgopt_ = ss.str();
-        log->info("host={}, port={}, user={}, password={}",
+        log->info("host={}, port={}, user={}, password={}, dbname={}",
                   pg_host,
                   pg_port,
                   pg_user,
-                  pg_pass);
+                  pg_pass,
+                  pg_dbname);
       }
 
      protected:
@@ -68,19 +70,19 @@ namespace iroha {
       }
 
       virtual void connect() {
-        connection = std::make_shared<pqxx::lazyconnection>(pgopt_);
-        try {
-          connection->activate();
-        } catch (const pqxx::broken_connection &e) {
-          FAIL() << "Connection to PostgreSQL broken: " << e.what();
-        }
-
-        StorageImpl::create(block_store_path, pgopt_)
-            .match([&](iroha::expected::Value<std::shared_ptr<StorageImpl>>
-                           &_storage) { storage = _storage.value; },
-                   [](iroha::expected::Error<std::string> &error) {
-                     FAIL() << "StorageImpl: " << error.error;
-                   });
+        StorageImpl::createDatabaseIfNotExists(pgopt_).match(
+            [this](expected::Value<std::unique_ptr<pqxx::lazyconnection>>
+                       &pg_connection) {
+              connection = std::move(pg_connection.value);
+              StorageImpl::create(block_store_path, pgopt_)
+                  .match(
+                      [&](iroha::expected::Value<std::shared_ptr<StorageImpl>>
+                              &_storage) { storage = _storage.value; },
+                      [](iroha::expected::Error<std::string> &error) {
+                        FAIL() << "StorageImpl: " << error.error;
+                      });
+            },
+            [](expected::Error<std::string> &error) { FAIL() << error.error; });
       }
 
       void SetUp() override {
@@ -98,7 +100,8 @@ namespace iroha {
       std::shared_ptr<StorageImpl> storage;
 
       std::string pgopt_ =
-          "host=localhost port=5432 user=postgres password=mysecretpassword";
+          "host=localhost port=5432 user=postgres password=mysecretpassword "
+          "dbname=iroha_db";
 
       std::string block_store_path =
           (boost::filesystem::temp_directory_path() / "block_store").string();
