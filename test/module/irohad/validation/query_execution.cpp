@@ -46,6 +46,56 @@ using wTransaction = std::shared_ptr<shared_model::interface::Transaction>;
 template <class T>
 using w = shared_model::detail::PolymorphicWrapper<T>;
 
+template <typename... Value>
+using ref = boost::variant<std::reference_wrapper<const Value>...>;
+
+using RefVar = ref<const shared_model::interface::GetAccount,
+                   const shared_model::interface::GetSignatories,
+                   const shared_model::interface::GetAccountTransactions,
+                   const shared_model::interface::GetAccountAssetTransactions,
+                   const shared_model::interface::GetTransactions,
+                   const shared_model::interface::GetAccountAssets,
+                   const shared_model::interface::GetAccountDetail,
+                   const shared_model::interface::GetRoles,
+                   const shared_model::interface::GetRolePermissions,
+                   const shared_model::interface::GetAssetInfo>;
+
+RefVar convert(shared_model::interface::Query::QueryVariantType var) {
+  return iroha::visit_in_place(
+      var,
+      [&](const w<shared_model::interface::GetAccount> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetSignatories> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetAccountTransactions> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetTransactions> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetAccountAssetTransactions> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetAccountAssets> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetAccountDetail> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetRoles> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetRolePermissions> &q) {
+        return RefVar(*q);
+      },
+      [&](const w<shared_model::interface::GetAssetInfo> &q) {
+        return RefVar(*q);
+      }
+  );
+}
+
 class QueryValidateExecuteTest : public ::testing::Test {
  public:
   QueryValidateExecuteTest() = default;
