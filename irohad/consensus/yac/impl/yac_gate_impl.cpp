@@ -121,18 +121,18 @@ namespace iroha {
                         [this, subscriber, model_hash](auto block) {
                           subscriber.on_next(block);
                           subscriber.on_completed();
-                          log_->info("loaded block block %s",
+                          log_->info("loaded block block {}",
                                       model_hash.toString());
                         },
                         // if load has failed, no peers provided the block
                         [this, subscriber, model_hash](std::exception_ptr) {
-                          log_->error("Cannot load committed block %s",
+                          log_->error("Cannot load committed block {}",
                                       model_hash.toString());
                           subscriber.on_completed();
                         });
               });
         });
-      }
+      }//15cee82611568ee10e956e8c2df2266fe2bccf77faafb94bf7b6911b8a7a58fd
 
       void YacGateImpl::copySignatures(const CommitMessage &commit) {
         current_block_.second->clearSignatures();
