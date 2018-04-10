@@ -118,13 +118,16 @@ namespace iroha {
                     .first()
                     .subscribe(
                         // if load is successful from at least one node
-                        [subscriber](auto block) {
+                        [this, subscriber, model_hash](auto block) {
                           subscriber.on_next(block);
                           subscriber.on_completed();
+                          log_->info("loaded block block %s",
+                                      model_hash.toString());
                         },
                         // if load has failed, no peers provided the block
-                        [this, subscriber](std::exception_ptr) {
-                          log_->error("Cannot load committed block");
+                        [this, subscriber, model_hash](std::exception_ptr) {
+                          log_->error("Cannot load committed block %s",
+                                      model_hash.toString());
                           subscriber.on_completed();
                         });
               });
