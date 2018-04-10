@@ -30,21 +30,21 @@ namespace iroha {
     OrderingServiceImpl::OrderingServiceImpl(
         std::shared_ptr<ametsuchi::PeerQuery> wsv,
         size_t max_size,
-        size_t delay_milliseconds,
+        rxcpp::observable<Rep> proposal_timeout,
         std::shared_ptr<network::OrderingServiceTransport> transport,
         std::shared_ptr<ametsuchi::OrderingServicePersistentState>
             persistent_state)
         : wsv_(wsv),
           max_size_(max_size),
-          delay_milliseconds_(delay_milliseconds),
           transport_(transport),
           persistent_state_(persistent_state),
           is_finished(false) {
-      updateTimer();
       log_ = logger::log("OrderingServiceImpl");
-
       // restore state of ordering service from persistent storage
       proposal_height = persistent_state_->loadProposalHeight().value();
+
+      handle = proposal_timeout.subscribe_on(rxcpp::observe_on_new_thread())
+                   .subscribe([this](auto) { this->updateTimer(); });
     }
 
     void OrderingServiceImpl::onTransaction(
@@ -111,10 +111,6 @@ namespace iroha {
       if (not queue_.empty()) {
         this->generateProposal();
       }
-      timer = rxcpp::observable<>::timer(
-          std::chrono::milliseconds(delay_milliseconds_));
-      handle = timer.subscribe_on(rxcpp::observe_on_new_thread())
-                   .subscribe([this](auto) { this->updateTimer(); });
     }
 
     OrderingServiceImpl::~OrderingServiceImpl() {
