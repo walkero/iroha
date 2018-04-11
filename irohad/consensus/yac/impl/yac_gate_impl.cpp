@@ -94,6 +94,11 @@ namespace iroha {
                 const auto model_hash =
                     hash_provider_->toModelHash(hash.value());
                 // iterate over peers who voted for the committed block
+                log_->info("iterating");
+                for (auto vote: commit_message.votes)
+                  log_->info("vote {} {} pkey {}", vote.hash.block_hash,
+                             vote.signature.signature.to_string(),
+                             vote.signature.pubkey.to_string());
                 rxcpp::observable<>::iterate(commit_message.votes)
                     // allow other peers to apply commit
                     .delay(std::chrono::milliseconds(delay_))
@@ -121,18 +126,19 @@ namespace iroha {
                         [this, subscriber, model_hash](auto block) {
                           subscriber.on_next(block);
                           subscriber.on_completed();
-                          log_->info("loaded block block {}",
+                          log_->info("loaded {}",
                                       model_hash.toString());
                         },
                         // if load has failed, no peers provided the block
                         [this, subscriber, model_hash](std::exception_ptr) {
-                          log_->error("Cannot load committed block {}",
+                          log_->error("Cannot load committed {}",
                                       model_hash.toString());
                           subscriber.on_completed();
                         });
               });
         });
       }//15cee82611568ee10e956e8c2df2266fe2bccf77faafb94bf7b6911b8a7a58fd
+    //P@ssw0rd123
 
       void YacGateImpl::copySignatures(const CommitMessage &commit) {
         current_block_.second->clearSignatures();
