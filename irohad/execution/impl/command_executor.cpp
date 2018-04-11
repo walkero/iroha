@@ -62,16 +62,6 @@ namespace iroha {
           (boost::format("asset %s is absent") % command->assetId()).str(),
           command_name);
     }
-    auto precision = asset.value()->precision();
-
-    if (command->amount().precision() != precision) {
-      return makeExecutionError(
-          (boost::format("precision mismatch: expected %d, but got %d")
-           % precision % command->amount().precision())
-              .str(),
-          command_name);
-    }
-
     if (not queries->getAccount(command->accountId())) {
       return makeExecutionError(
           (boost::format("account %s is absent") % command->accountId()).str(),
@@ -353,15 +343,6 @@ namespace iroha {
           (boost::format("asset %s is absent") % command->assetId()).str(),
           command_name);
     }
-    auto precision = asset.value()->precision();
-
-    if (command->amount().precision() != precision) {
-      return makeExecutionError(
-          (boost::format("precision mismatch: expected %d, but got %d")
-           % precision % command->amount().precision())
-              .str(),
-          command_name);
-    }
     auto account_asset =
         queries->getAccountAsset(command->accountId(), command->assetId());
     if (not account_asset) {
@@ -415,13 +396,6 @@ namespace iroha {
           (boost::format("asset %s is absent of %s") % command->assetId()
            % command->destAccountId())
               .str(),
-          command_name);
-    }
-    // Precision for both wallets
-    auto precision = asset.value()->precision();
-    if (command->amount().precision() != precision) {
-      return makeExecutionError(
-          (boost::format("precision %d is wrong") % precision).str(),
           command_name);
     }
     // Set new balance for source account
@@ -856,14 +830,6 @@ namespace iroha {
       const shared_model::interface::TransferAsset &command,
       ametsuchi::WsvQuery &queries,
       const shared_model::interface::types::AccountIdType &creator_account_id) {
-    auto asset = queries.getAsset(command.assetId());
-    if (not asset) {
-      return false;
-    }
-    // Amount is formed wrong
-    if (command.amount().precision() != asset.value()->precision()) {
-      return false;
-    }
     auto account_asset =
         queries.getAccountAsset(command.srcAccountId(), command.assetId());
     if (not account_asset) {

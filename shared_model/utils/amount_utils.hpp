@@ -18,7 +18,9 @@
 #ifndef IROHA_AMOUNT_UTILS_HPP
 #define IROHA_AMOUNT_UTILS_HPP
 
+#include "builders/default_builders.hpp"
 #include "builders/protobuf/common_objects/proto_amount_builder.hpp"
+#include "common/result.hpp"
 
 /**
  * Sums up two amounts.
@@ -31,19 +33,17 @@ iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                         std::shared_ptr<std::string>>
 operator+(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
-  // check precisions
-  if (a.precision() != b.precision()) {
-    return iroha::expected::makeError(
-        std::make_shared<std::string>("precision mismatch"));
-  }
   if (a.intValue() + b.intValue() < a.intValue()
       || a.intValue() + b.intValue() < b.intValue()) {
     return iroha::expected::makeError(
         std::make_shared<std::string>("addition overflows"));
   }
+  auto max_precision = std::max(a.precision(), b.precision());
+  auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
+  auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
   return shared_model::builder::AmountBuilderWithoutValidator()
-      .precision(a.precision())
-      .intValue(a.intValue() + b.intValue())
+      .precision(max_precision)
+      .intValue(val_a + val_b)
       .build();
 }
 
@@ -58,19 +58,17 @@ iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                         std::shared_ptr<std::string>>
 operator-(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
-  // check precisions
-  if (a.precision() != b.precision()) {
-    return iroha::expected::makeError(
-        std::make_shared<std::string>("precision mismatch"));
-  }
   // check if a greater than b
   if (a.intValue() < b.intValue()) {
     return iroha::expected::makeError(
         std::make_shared<std::string>("minuend is smaller than subtrahend"));
   }
+  auto max_precision = std::max(a.precision(), b.precision());
+  auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
+  auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
   return shared_model::builder::AmountBuilderWithoutValidator()
-      .precision(a.precision())
-      .intValue(a.intValue() - b.intValue())
+      .precision(max_precision)
+      .intValue(val_a - val_b)
       .build();
 }
 
