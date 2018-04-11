@@ -44,15 +44,15 @@ TEST_F(AmountTest, PlusTest) {
                   },
                   [](const iroha::expected::Error<std::shared_ptr<std::string>>
                          &e) {
-                    ASSERT_TRUE(false);
+                    FAIL() << *e.error;
                   });
             },
             [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
-              ASSERT_TRUE(false);
+              FAIL() << *e.error;
             });
       },
       [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
-        ASSERT_TRUE(false);
+        FAIL() << *e.error;
       });
 }
 
@@ -79,14 +79,14 @@ TEST_F(AmountTest, MinusTest) {
                   },
                   [](const iroha::expected::Error<std::shared_ptr<std::string>>
                      &e) {
-                    ASSERT_TRUE(false);
+                    FAIL() << *e.error;
                   });
             },
             [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
-              ASSERT_TRUE(false);
+              FAIL() << *e.error;
             });
       },
       [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
-        ASSERT_TRUE(false);
+        FAIL() << *e.error;
       });
 }
