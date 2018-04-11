@@ -830,6 +830,10 @@ namespace iroha {
       const shared_model::interface::TransferAsset &command,
       ametsuchi::WsvQuery &queries,
       const shared_model::interface::types::AccountIdType &creator_account_id) {
+    auto asset = queries.getAsset(command.assetId());
+    if (not asset) {
+      return false;
+    }
     auto account_asset =
         queries.getAccountAsset(command.srcAccountId(), command.assetId());
     if (not account_asset) {

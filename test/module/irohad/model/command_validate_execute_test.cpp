@@ -36,14 +36,14 @@
 #include "model/commands/set_quorum.hpp"
 #include "model/commands/subtract_asset_quantity.hpp"
 #include "model/commands/transfer_asset.hpp"
-#include "validators/permissions.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_mocks.hpp"
+#include "validators/permissions.hpp"
 
+using ::testing::_;
 using ::testing::AllOf;
 using ::testing::AtLeast;
 using ::testing::Return;
 using ::testing::StrictMock;
-using ::testing::_;
 
 using namespace iroha;
 using namespace iroha::ametsuchi;
@@ -268,7 +268,7 @@ TEST_F(AddAssetQuantityTest, InvalidWhenNoRoles) {
   ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
 }
 
-TEST_F(AddAssetQuantityTest, InvalidWhenZeroAmount) {
+TEST_F(AddAssetQuantityTest, ValidWhenZeroAmount) {
   // Amount is zero
   Amount amount(0);
   add_asset_quantity->amount = amount;
@@ -277,19 +277,15 @@ TEST_F(AddAssetQuantityTest, InvalidWhenZeroAmount) {
       .WillOnce(Return(admin_roles));
   EXPECT_CALL(*wsv_query, getRolePermissions(admin_role))
       .WillOnce(Return(role_permissions));
-  ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
-}
-
-TEST_F(AddAssetQuantityTest, InvalidWhenWrongPrecision) {
-  // Amount is with wrong precision (must be 2)
-  Amount amount(add_asset_quantity->amount.getIntValue(), 30);
-  add_asset_quantity->amount = amount;
-  EXPECT_CALL(*wsv_query, getAccountRoles(admin_id))
-      .WillOnce(Return(admin_roles));
-  EXPECT_CALL(*wsv_query, getRolePermissions(admin_role))
-      .WillOnce(Return(role_permissions));
-  EXPECT_CALL(*wsv_query, getAsset(asset_id)).WillOnce(Return(asset));
-  ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
+  EXPECT_CALL(*wsv_query, getAccount(add_asset_quantity->account_id))
+      .WillOnce(Return(account));
+  EXPECT_CALL(*wsv_query,
+              getAccountAsset(add_asset_quantity->account_id,
+                              add_asset_quantity->asset_id))
+      .WillOnce(Return(wallet));
+  EXPECT_CALL(*wsv_command, upsertAccountAsset(_))
+      .WillOnce(Return(WsvCommandResult()));
+  ASSERT_NO_THROW(checkValueCase(validateAndExecute()));
 }
 
 /**
@@ -498,9 +494,9 @@ TEST_F(SubtractAssetQuantityTest, InvalidWhenNoRoles) {
 /**
  * @given SubtractAssetQuantity
  * @when arguments amount is zero
- * @then executor will be failed
+ * @then executor will be passed
  */
-TEST_F(SubtractAssetQuantityTest, InvalidWhenZeroAmount) {
+TEST_F(SubtractAssetQuantityTest, ValidWhenZeroAmount) {
   // Amount is zero
   Amount amount(0);
   subtract_asset_quantity->amount = amount;
@@ -509,24 +505,13 @@ TEST_F(SubtractAssetQuantityTest, InvalidWhenZeroAmount) {
       .WillOnce(Return(admin_roles));
   EXPECT_CALL(*wsv_query, getRolePermissions(admin_role))
       .WillOnce(Return(role_permissions));
-  ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
-}
-
-/**
- * @given SubtractAssetQuantity
- * @when arguments amount precision is invalid
- * @then executor will be failed
- */
-TEST_F(SubtractAssetQuantityTest, InvalidWhenWrongPrecision) {
-  // Amount is with wrong precision (must be 2)
-  Amount amount(subtract_asset_quantity->amount.getIntValue(), 30);
-  subtract_asset_quantity->amount = amount;
-  EXPECT_CALL(*wsv_query, getAccountRoles(admin_id))
-      .WillOnce(Return(admin_roles));
-  EXPECT_CALL(*wsv_query, getRolePermissions(admin_role))
-      .WillOnce(Return(role_permissions));
-  EXPECT_CALL(*wsv_query, getAsset(asset_id)).WillOnce(Return(asset));
-  ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
+  EXPECT_CALL(*wsv_query,
+              getAccountAsset(subtract_asset_quantity->account_id,
+                              subtract_asset_quantity->asset_id))
+      .WillOnce(Return(wallet));
+  EXPECT_CALL(*wsv_command, upsertAccountAsset(_))
+      .WillOnce(Return(WsvCommandResult()));
+  ASSERT_NO_THROW(checkValueCase(validateAndExecute()));
 }
 
 /**
@@ -1227,7 +1212,7 @@ class TransferAssetTest : public CommandValidateExecuteTest {
     transfer_asset->dest_account_id = account_id;
     transfer_asset->asset_id = asset_id;
     transfer_asset->description = description;
-    Amount amount(150, 2);
+    Amount amount(150, 3);
     transfer_asset->amount = amount;
     command = transfer_asset;
     role_permissions = {can_transfer, can_receive};
@@ -1471,47 +1456,6 @@ TEST_F(TransferAssetTest, InvalidWhenInsufficientFundsDuringExecute) {
   // More than account balance
   transfer_asset->amount = Amount(155, 2);
 
-  ASSERT_NO_THROW(checkErrorCase(execute()));
-}
-
-TEST_F(TransferAssetTest, InvalidWhenWrongPrecision) {
-  // Amount has wrong precision
-  EXPECT_CALL(*wsv_query, getAccountRoles(transfer_asset->dest_account_id))
-      .WillOnce(Return(admin_roles));
-  EXPECT_CALL(*wsv_query, getAccountRoles(transfer_asset->src_account_id))
-      .WillOnce(Return(admin_roles));
-  EXPECT_CALL(*wsv_query, getRolePermissions(admin_role))
-      .Times(2)
-      .WillRepeatedly(Return(role_permissions));
-
-  Amount amount(transfer_asset->amount.getIntValue(), 30);
-  transfer_asset->amount = amount;
-
-  EXPECT_CALL(*wsv_query, getAsset(transfer_asset->asset_id))
-      .WillOnce(Return(asset));
-
-  ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
-}
-
-/**
- * @given TransferAsset
- * @when command tries to transfer amount with wrong precision
- * @then execute fails and returns false
- */
-TEST_F(TransferAssetTest, InvalidWhenWrongPrecisionDuringExecute) {
-  EXPECT_CALL(*wsv_query, getAsset(transfer_asset->asset_id))
-      .WillOnce(Return(asset));
-  EXPECT_CALL(
-      *wsv_query,
-      getAccountAsset(transfer_asset->src_account_id, transfer_asset->asset_id))
-      .WillOnce(Return(src_wallet));
-  EXPECT_CALL(*wsv_query,
-              getAccountAsset(transfer_asset->dest_account_id,
-                              transfer_asset->asset_id))
-      .WillOnce(Return(dst_wallet));
-
-  Amount amount(transfer_asset->amount.getIntValue(), 30);
-  transfer_asset->amount = amount;
   ASSERT_NO_THROW(checkErrorCase(execute()));
 }
 
