@@ -31,21 +31,19 @@ TEST_F(AmountTest, PlusTest) {
       b = shared_model::builder::DefaultAmountBuilder::fromString("100");
 
   a.match(
-      [b](const iroha::expected::Value<
-          std::shared_ptr<shared_model::interface::Amount>> &aa) {
+      [&b](const iroha::expected::Value<
+           std::shared_ptr<shared_model::interface::Amount>> &a_value) {
         b.match(
-            [&aa](const iroha::expected::Value<
-                  std::shared_ptr<shared_model::interface::Amount>> &bb) {
-              auto c = *aa.value + *bb.value;
+            [&a_value](const iroha::expected::Value<std::shared_ptr<
+                           shared_model::interface::Amount>> &b_value) {
+              auto c = *a_value.value + *b_value.value;
               c.match(
-                  [](const auto &cc) {
-                    ASSERT_EQ(cc.value->intValue(), 1334567);
-                    ASSERT_EQ(cc.value->precision(), 3);
+                  [](const auto &c_value) {
+                    ASSERT_EQ(c_value.value->intValue(), 1334567);
+                    ASSERT_EQ(c_value.value->precision(), 3);
                   },
                   [](const iroha::expected::Error<std::shared_ptr<std::string>>
-                         &e) {
-                    FAIL() << *e.error;
-                  });
+                         &e) { FAIL() << *e.error; });
             },
             [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
               FAIL() << *e.error;
@@ -66,21 +64,43 @@ TEST_F(AmountTest, MinusTest) {
       b = shared_model::builder::DefaultAmountBuilder::fromString("100");
 
   a.match(
-      [b](const iroha::expected::Value<
-          std::shared_ptr<shared_model::interface::Amount>> &aa) {
+      [&b](const iroha::expected::Value<
+           std::shared_ptr<shared_model::interface::Amount>> &a_value) {
         b.match(
-            [&aa](const iroha::expected::Value<
-                std::shared_ptr<shared_model::interface::Amount>> &bb) {
-              auto c = *aa.value - *bb.value;
+            [&a_value](const iroha::expected::Value<std::shared_ptr<
+                           shared_model::interface::Amount>> &b_value) {
+              auto c = *a_value.value - *b_value.value;
               c.match(
-                  [](const auto &cc) {
-                    ASSERT_EQ(cc.value->intValue(), 1134567);
-                    ASSERT_EQ(cc.value->precision(), 3);
+                  [](const auto &c_value) {
+                    ASSERT_EQ(c_value.value->intValue(), 1134567);
+                    ASSERT_EQ(c_value.value->precision(), 3);
                   },
                   [](const iroha::expected::Error<std::shared_ptr<std::string>>
-                     &e) {
-                    FAIL() << *e.error;
-                  });
+                         &e) { FAIL() << *e.error; });
+            },
+            [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
+              FAIL() << *e.error;
+            });
+      },
+      [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
+        FAIL() << *e.error;
+      });
+}
+
+TEST_F(AmountTest, PrecisionTest) {
+  iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
+                          std::shared_ptr<std::string>>
+      a = shared_model::builder::DefaultAmountBuilder::fromString("1234.567");
+
+  a.match(
+      [](const iroha::expected::Value<
+          std::shared_ptr<shared_model::interface::Amount>> &a_value) {
+        auto c = makePrecision(*a_value.value, 4);
+        c.match(
+            [](const iroha::expected::Value<
+                std::shared_ptr<shared_model::interface::Amount>> &c_value) {
+              ASSERT_EQ(c_value.value->intValue(), 12345670);
+              ASSERT_EQ(c_value.value->precision(), 4);
             },
             [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
               FAIL() << *e.error;

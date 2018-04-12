@@ -62,6 +62,18 @@ namespace iroha {
           (boost::format("asset %s is absent") % command->assetId()).str(),
           command_name);
     }
+
+    auto precision = asset.value()->precision();
+    if (command->amount().precision() > precision) {
+      return makeExecutionError(
+          (boost::format("command pecision is greater than asset precision: "
+                         "expected %d, but got %d")
+           % precision % command->amount().precision())
+              .str(),
+          command_name);
+    }
+    auto command_amount =
+        makePrecision(command->amount(), asset.value()->precision());
     if (not queries->getAccount(command->accountId())) {
       return makeExecutionError(
           (boost::format("account %s is absent") % command->accountId()).str(),
@@ -70,9 +82,11 @@ namespace iroha {
     auto account_asset =
         queries->getAccountAsset(command->accountId(), command->assetId());
 
-    auto new_balance = amount_builder_.precision(command->amount().precision())
-                           .intValue(command->amount().intValue())
-                           .build();
+    auto new_balance = command_amount | [this](const auto &amount) {
+      return amount_builder_.precision(amount->precision())
+          .intValue(amount->intValue())
+          .build();
+    };
     using AccountAssetResult =
         expected::Result<std::shared_ptr<shared_model::interface::AccountAsset>,
                          iroha::ExecutionError>;
@@ -343,6 +357,17 @@ namespace iroha {
           (boost::format("asset %s is absent") % command->assetId()).str(),
           command_name);
     }
+    auto precision = asset.value()->precision();
+    if (command->amount().precision() > precision) {
+      return makeExecutionError(
+          (boost::format("command pecision is greater than asset precision: "
+                         "expected %d, but got %d")
+           % precision % command->amount().precision())
+              .str(),
+          command_name);
+    }
+    auto command_amount =
+        makePrecision(command->amount(), asset.value()->precision());
     auto account_asset =
         queries->getAccountAsset(command->accountId(), command->assetId());
     if (not account_asset) {
@@ -351,14 +376,16 @@ namespace iroha {
                                     .str(),
                                 command_name);
     }
-    auto account_asset_new =
-        (account_asset.value()->balance() - command->amount()) |
-        [this, &account_asset](const auto &new_balance) {
-          return account_asset_builder_.balance(*new_balance)
-              .accountId(account_asset.value()->accountId())
-              .assetId(account_asset.value()->assetId())
-              .build();
-        };
+    auto account_asset_new = command_amount |
+        [&account_asset](const auto &amount) {
+          return account_asset.value()->balance() - *amount;
+        }
+        | [this, &account_asset](const auto &new_balance) {
+            return account_asset_builder_.balance(*new_balance)
+                .accountId(account_asset.value()->accountId())
+                .assetId(account_asset.value()->assetId())
+                .build();
+          };
 
     return account_asset_new.match(
         [&](const expected::Value<
@@ -398,16 +425,29 @@ namespace iroha {
               .str(),
           command_name);
     }
+    auto precision = asset.value()->precision();
+    if (command->amount().precision() > precision) {
+      return makeExecutionError(
+          (boost::format("command pecision is greater than asset precision: "
+                         "expected %d, but got %d")
+           % precision % command->amount().precision())
+              .str(),
+          command_name);
+    }
+    auto command_amount =
+        makePrecision(command->amount(), asset.value()->precision());
     // Set new balance for source account
-    auto src_account_asset_new =
-        (src_account_asset.value()->balance() - command->amount()) |
-        [this, &src_account_asset](const auto &new_src_balance) {
-          return account_asset_builder_
-              .assetId(src_account_asset.value()->assetId())
-              .accountId(src_account_asset.value()->accountId())
-              .balance(*new_src_balance)
-              .build();
-        };
+    auto src_account_asset_new = command_amount |
+        [&src_account_asset](const auto &amount) {
+          return src_account_asset.value()->balance() - *amount;
+        }
+        | [this, &src_account_asset](const auto &new_src_balance) {
+            return account_asset_builder_
+                .assetId(src_account_asset.value()->assetId())
+                .accountId(src_account_asset.value()->accountId())
+                .balance(*new_src_balance)
+                .build();
+          };
     return src_account_asset_new.match(
         [&](const expected::Value<
             std::shared_ptr<shared_model::interface::AccountAsset>>
@@ -832,6 +872,10 @@ namespace iroha {
       const shared_model::interface::types::AccountIdType &creator_account_id) {
     auto asset = queries.getAsset(command.assetId());
     if (not asset) {
+      return false;
+    }
+    // Amount is formed wrong
+    if (command.amount().precision() > asset.value()->precision()) {
       return false;
     }
     auto account_asset =

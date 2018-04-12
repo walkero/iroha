@@ -33,14 +33,14 @@ iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                         std::shared_ptr<std::string>>
 operator+(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
-  if (a.intValue() + b.intValue() < a.intValue()
-      || a.intValue() + b.intValue() < b.intValue()) {
-    return iroha::expected::makeError(
-        std::make_shared<std::string>("addition overflows"));
-  }
   auto max_precision = std::max(a.precision(), b.precision());
   auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
   auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
+  if (val_a < a.intValue() || val_b < b.intValue() || val_a + val_b < val_a
+      || val_a + val_b < val_b) {
+    return iroha::expected::makeError(
+        std::make_shared<std::string>("addition overflows"));
+  }
   return shared_model::builder::AmountBuilderWithoutValidator()
       .precision(max_precision)
       .intValue(val_a + val_b)
@@ -66,11 +66,41 @@ operator-(const shared_model::interface::Amount &a,
   auto max_precision = std::max(a.precision(), b.precision());
   auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
   auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
+  if (val_a < a.intValue() || val_b < b.intValue()) {
+    return iroha::expected::makeError(
+        std::make_shared<std::string>("new precision overflows number"));
+  }
   return shared_model::builder::AmountBuilderWithoutValidator()
       .precision(max_precision)
       .intValue(val_a - val_b)
       .build();
 }
+
+/**
+ * Make amount with bigger precision
+ * Otherwise nullopt is returned
+ * @param a amount
+ * @param b right term
+ */
+iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
+                        std::shared_ptr<std::string>>
+makePrecision(const shared_model::interface::Amount &amount,
+          const int new_precision) {
+  if (amount.precision() > new_precision) {
+    return iroha::expected::makeError(
+        std::make_shared<std::string>("new precision is smaller than current"));
+  }
+  auto val_amount = amount.intValue() * (int)std::pow(10, new_precision - amount.precision());
+  if (val_amount < amount.intValue()) {
+    return iroha::expected::makeError(
+        std::make_shared<std::string>("operation overflows number"));
+  }
+  return shared_model::builder::AmountBuilderWithoutValidator()
+      .precision(new_precision)
+      .intValue(val_amount)
+      .build();
+}
+
 
 int compareAmount(const shared_model::interface::Amount &a,
                   const shared_model::interface::Amount &b) {
