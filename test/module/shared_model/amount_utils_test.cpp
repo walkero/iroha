@@ -110,3 +110,38 @@ TEST_F(AmountTest, PrecisionTest) {
         FAIL() << *e.error;
       });
 }
+
+TEST_F(AmountTest, PlusOverflowsTest) {
+  const std::string &uint256_halfmax =
+      "723700557733226221397318656304299424082937404160253525246609900049457060"
+          "2495.0";  // 2**252 - 1
+  iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
+                          std::shared_ptr<std::string>>
+      a = shared_model::builder::DefaultAmountBuilder::fromString(uint256_halfmax);
+
+  iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
+                          std::shared_ptr<std::string>>
+      b = shared_model::builder::DefaultAmountBuilder::fromString("100.00");
+
+  a.match(
+      [&b](const iroha::expected::Value<
+          std::shared_ptr<shared_model::interface::Amount>> &a_value) {
+        b.match(
+            [&a_value](const iroha::expected::Value<std::shared_ptr<
+                shared_model::interface::Amount>> &b_value) {
+              auto c = *a_value.value + *b_value.value;
+              c.match(
+                  [](const auto &c_value) {
+                    FAIL() << "Operation successful but shouldn't";
+                  },
+                  [](const iroha::expected::Error<std::shared_ptr<std::string>>
+                     &e) { SUCCEED() << *e.error; });
+            },
+            [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
+              FAIL() << *e.error;
+            });
+      },
+      [](const iroha::expected::Error<std::shared_ptr<std::string>> &e) {
+        FAIL() << *e.error;
+      });
+}
