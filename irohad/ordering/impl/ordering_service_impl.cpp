@@ -43,8 +43,10 @@ namespace iroha {
       // restore state of ordering service from persistent storage
       proposal_height = persistent_state_->loadProposalHeight().value();
 
-      handle = proposal_timeout.subscribe_on(rxcpp::observe_on_new_thread())
-                   .subscribe([this](auto) { this->updateTimer(); });
+      handle =
+          proposal_timeout.take_while([this](auto) { return !is_finished; })
+              .subscribe_on(rxcpp::observe_on_new_thread())
+              .subscribe([this](auto) { this->updateTimer(); });
     }
 
     void OrderingServiceImpl::onTransaction(
@@ -53,7 +55,6 @@ namespace iroha {
       log_->info("Queue size is {}", queue_.unsafe_size());
 
       if (queue_.unsafe_size() >= max_size_) {
-        handle.unsubscribe();
         updateTimer();
       }
     }
@@ -114,9 +115,8 @@ namespace iroha {
     }
 
     OrderingServiceImpl::~OrderingServiceImpl() {
-      std::lock_guard<std::mutex> lock(m);
       is_finished = true;
-      handle.unsubscribe();
+      std::lock_guard<std::mutex> lock(m);
     }
   }  // namespace ordering
 }  // namespace iroha
