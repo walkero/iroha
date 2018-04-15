@@ -6,7 +6,7 @@
 //                      |-> ARMv7                      |-> ARMv7        |-> SonarQube   |-> bindings
 //                      |-> ARMv8                      |-> ARMv8
 //                      |-> MacOS                      |-> MacOS
-
+//
 // NOTE: In build stage we differentiate only platforms in pipeline scheme. Build/Release is filtered inside the platform
 // TODO: limit stage of pipeline for execution: 3 hours
 // (postponed) TODO: limit nightly build pipeline execution for 3 days max
@@ -255,7 +255,7 @@ pipeline {
     stage('Tests') {
       when {
         allOf {
-          expression { return ! params.BindingsOnly }
+          expression { return !params.BindingsOnly }
         }
       }
       parallel {
@@ -311,7 +311,6 @@ pipeline {
       }
       parallel {
         stage('lcov_cobertura') {
-          // when { expression { return params.MacOS } }
           steps {
             script {
               def cov_platform = ''
@@ -335,13 +334,11 @@ pipeline {
                   coverage = load '.jenkinsci/debug-steps.groovy'  
                 }
                   coverage.doPostCoverageCoberturaStep()
-                }
               }
             }
           }
         }
         stage('sonarqube') {
-          // when { expression { return params.MacOS } }
           steps {
             script {
               def cov_platform = ''
@@ -380,8 +377,6 @@ pipeline {
               expression { BRANCH_NAME ==~ /(master|develop)/ }
             }
           }
-          // build docs on any vacant node. Prefer `x86_64` over
-          // others as nodes are more powerful
           agent { label 'x86_64_aws_cov' }
           steps {
             script {
@@ -415,14 +410,6 @@ pipeline {
               }
             }
           }
-        }
-      }
-    }
-    stage('Publish') {
-      steps {
-        script {
-            //TODO: finish publish phase or get rid of it
-            sh 'echo 123'
         }
       }
     }
