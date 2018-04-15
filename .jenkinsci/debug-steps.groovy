@@ -21,7 +21,7 @@ def doDebugBuild(coverageEnabled=false) {
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
-  workspace_path = sh(script: 'pwd', returnStdout: true);
+  workspace_path = sh(script: 'pwd', returnStdout: true).trim();
   def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
   def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
