@@ -21,8 +21,6 @@ def doDebugBuild(coverageEnabled=false) {
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
-  workspace_path = sh(script: 'pwd', returnStdout: true).trim();
-  sh "echo ${workspace_path}"
   def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
   def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
@@ -37,9 +35,7 @@ def doDebugBuild(coverageEnabled=false) {
     + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " --network=${env.IROHA_NETWORK}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}"
-    + " -v ${workspace_path}:${workspace_path}:rw,rshared") {
+    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
 
     def scmVars = checkout scm
     def cmakeOptions = ""
@@ -82,8 +78,7 @@ def doPreCoverageStep() {
     + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}"
-    + " -v ${workspace_path}:${workspace_path}:rw,rshared") {
+    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
       
       sh "cmake --build build --target coverage.init.info"
   }
@@ -110,8 +105,7 @@ def doTestStep() {
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
     + " --network=${env.IROHA_NETWORK}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}"
-    + " -v ${workspace_path}:${workspace_path}:rw,rshared") {
+    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
 
       def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
       if (testExitCode != 0) {
@@ -132,8 +126,7 @@ def doPostCoverageCoberturaStep() {
     + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}"
-    + " -v ${workspace_path}:${workspace_path}:rw,rshared") {
+    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
 
         sh "cmake --build build --target coverage.info"
         sh "python /tmp/lcov_cobertura.py build/reports/coverage.info -o build/reports/coverage.xml"
@@ -154,8 +147,7 @@ def doPostCoverageSonarStep() {
     + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}"
-    + " -v ${workspace_path}:${workspace_path}:rw,rshared") {
+    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
 
       sh "cmake --build build --target cppcheck"
       // Sonar
@@ -174,5 +166,3 @@ def doPostCoverageSonarStep() {
   }
 }
 return this
-
-
