@@ -89,8 +89,8 @@ pipeline {
           steps {
             script {
               if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/debug-steps.groovy"
-                coverage = load ".jenkinsci/selected-branches-coverage.groovy"
+                def debugBuild = load ".jenkinsci/debug-steps.groovy"
+                def coverage = load ".jenkinsci/selected-branches-coverage.groovy"
                 if (coverage.selectedBranchesCoverage(['develop', 'master'])) {
                   debugBuild.doDebugBuild(true)
                 }
@@ -99,7 +99,7 @@ pipeline {
                 }
               }
               else {
-                releaseBuild = load ".jenkinsci/release-steps.groovy"
+                def releaseBuild = load ".jenkinsci/release-steps.groovy"
                 releaseBuild.doReleaseBuild()
               }
             }
@@ -113,7 +113,7 @@ pipeline {
             }
             always {
               script {
-                post = load ".jenkinsci/linux-post-step.groovy"
+                def post = load ".jenkinsci/linux-post-step.groovy"
                 post.linuxPostStep()
               }
             }
@@ -125,8 +125,8 @@ pipeline {
           steps {
             script {
               if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/debug-steps.groovy"
-                coverage = load ".jenkinsci/selected-branches-coverage.groovy"
+                def debugBuild = load ".jenkinsci/debug-steps.groovy"
+                def coverage = load ".jenkinsci/selected-branches-coverage.groovy"
                 if (!params.Linux && !params.ARMv8 && !params.MacOS && 
                    (coverage.selectedBranchesCoverage(['develop', 'master']))) {
                   debugBuild.doDebugBuild(true)
@@ -136,7 +136,7 @@ pipeline {
                 }
               }
               else {
-                releaseBuild = load ".jenkinsci/release-steps.groovy"
+                def releaseBuild = load ".jenkinsci/release-steps.groovy"
                 releaseBuild.doReleaseBuild()
               }
             }
@@ -144,7 +144,7 @@ pipeline {
           post {
             always {
               script {
-                post = load ".jenkinsci/linux-post-step.groovy"
+                def post = load ".jenkinsci/linux-post-step.groovy"
                 post.linuxPostStep()
               }
             }
@@ -156,8 +156,8 @@ pipeline {
           steps {
             script {
               if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/debug-steps.groovy"
-                coverage = load ".jenkinsci/selected-branches-coverage.groovy"
+                def debugBuild = load ".jenkinsci/debug-steps.groovy"
+                def coverage = load ".jenkinsci/selected-branches-coverage.groovy"
                 if (!params.Linux && !params.MacOS && 
                    (coverage.selectedBranchesCoverage(['develop', 'master']))) {
                   debugBuild.doDebugBuild(true)
@@ -167,7 +167,7 @@ pipeline {
                 }
               }
               else {
-                releaseBuild = load ".jenkinsci/release-steps.groovy"
+                def releaseBuild = load ".jenkinsci/release-steps.groovy"
                 releaseBuild.doReleaseBuild()
               }
             }
@@ -175,7 +175,7 @@ pipeline {
           post {
             always {
               script {
-                post = load ".jenkinsci/linux-post-step.groovy"
+                def post = load ".jenkinsci/linux-post-step.groovy"
                 post.linuxPostStep()
               }
             }
@@ -187,8 +187,8 @@ pipeline {
           steps {
             script {
               if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/mac-debug-steps.groovy"
-                coverage = load ".jenkinsci/selected-branches-coverage.groovy"
+                def debugBuild = load ".jenkinsci/mac-debug-steps.groovy"
+                def coverage = load ".jenkinsci/selected-branches-coverage.groovy"
                 if (!params.Linux && 
                    (coverage.selectedBranchesCoverage(['develop', 'master']))) {
                   debugBuild.doDebugBuild(true)
@@ -196,9 +196,13 @@ pipeline {
                 else {
                   debugBuild.doDebugBuild() 
                 }
+                if ( BRANCH_NAME ==~ /(develop|master)/) {
+                  def releaseBuild = load ".jenkinsci/mac-release-steps.groovy"
+                  releaseBuild.doReleaseBuild()
+                }
               }
               else {
-                releaseBuild = load ".jenkinsci/mac-release-steps.groovy"
+                def releaseBuild = load ".jenkinsci/mac-release-steps.groovy"
                 releaseBuild.doReleaseBuild()
               }
             }
@@ -206,7 +210,7 @@ pipeline {
           post {
             always {
               script {
-                post = load ".jenkinsci/linux-post-step.groovy"
+                def post = load ".jenkinsci/linux-post-step.groovy"
                 post.linuxPostStep()
               }
             }
@@ -219,15 +223,33 @@ pipeline {
       when {
         allOf {
           expression { return ! params.BindingsOnly }
-          //expression { return params.
+          expression { params.BUILD_TYPE == 'Debug' }
+          expression { BRANCH_NAME ==~ /(master|develop)/ }
         }
       }
-      agent { label 'x86_64_aws_cov' }
       steps {
         script {
-          if (params.BUILD_TYPE == 'Debug') {
-            debugBuild = load ".jenkinsci/debug-steps.groovy"
-            debugBuild.doPreCoverageStep()
+          def cov_platform = ''
+          if (params.Linux) {
+            cov_platform = 'x86_64_aws_cov'
+          }
+          if (!params.Linux && params.MacOS) {
+            cov_platform = 'mac'
+          }
+          if (!params.Linux && !params.MacOS && params.ARMv8) {
+            cov_platform = 'armv8'
+          }
+          else if (!params.Linux && !params.MacOS && !params.ARMv8) {
+            cov_platform = 'armv7'
+          }
+          node(cov_platform) {
+            if (cov_platform == 'mac') {
+              coverage = load '.jenkinsci/mac-debug-steps.groovy' 
+            }
+            else {
+              coverage = load '.jenkinsci/debug-steps.groovy'  
+            }
+            coverage.doPreCoverageStep()
           }
         }
       }
@@ -244,7 +266,7 @@ pipeline {
           agent { label 'x86_64_aws_test' }
           steps {
             script {
-              tests = load ".jenkinsci/debug-steps.groovy"
+              def tests = load ".jenkinsci/debug-steps.groovy"
               tests.doTestStep()  //TODO: pass tests list 
             }
           }
@@ -254,7 +276,7 @@ pipeline {
           agent { label 'armv7' }
           steps {
             script {
-              tests = load ".jenkinsci/debug-steps.groovy"
+              def tests = load ".jenkinsci/debug-steps.groovy"
               tests.doTestStep()  //TODO: pass tests list 
             }
           }
@@ -264,7 +286,7 @@ pipeline {
           agent { label 'armv8' }
           steps {
             script {
-              tests = load ".jenkinsci/debug-steps.groovy"
+              def tests = load ".jenkinsci/debug-steps.groovy"
               tests.doTestStep()  //TODO: pass tests list 
             }
           }
@@ -274,7 +296,7 @@ pipeline {
           agent { label 'mac' }
           steps {
             script {
-              tests = load ".jenkinsci/mac-debug-steps.groovy"
+              def tests = load ".jenkinsci/mac-debug-steps.groovy"
               tests.doTestStep()  //TODO: pass tests list 
             }
           }
@@ -286,29 +308,66 @@ pipeline {
       when {
         allOf {
           expression { return ! params.BindingsOnly }
+          expression { params.BUILD_TYPE == 'Debug' }
+          expression { BRANCH_NAME ==~ /(master|develop)/ }
         }
       }
       parallel {
         stage('lcov_cobertura') {
           // when { expression { return params.MacOS } }
-          agent { label 'x86_64_aws_cov' }
           steps {
             script {
-              if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/debug-steps.groovy"
-                debugBuild.doPostCoverageCoberturaStep()
+              def cov_platform = ''
+              if (params.Linux) {
+                cov_platform = 'x86_64_aws_cov'
+              }
+              if (!params.Linux && params.MacOS) {
+                cov_platform = 'mac'
+              }
+              if (!params.Linux && !params.MacOS && params.ARMv8) {
+                cov_platform = 'armv8'
+              }
+              else if (!params.Linux && !params.MacOS && !params.ARMv8) {
+                cov_platform = 'armv7'
+              }
+              node(cov_platform) {
+                if (cov_platform == 'mac') {
+                  coverage = load '.jenkinsci/mac-debug-steps.groovy' 
+                }
+                else {
+                  coverage = load '.jenkinsci/debug-steps.groovy'  
+                }
+                  coverage.doPostCoverageCoberturaStep()
+                }
               }
             }
           }
         }
         stage('sonarqube') {
           // when { expression { return params.MacOS } }
-          agent { label 'armv7' }
           steps {
             script {
-              if (params.BUILD_TYPE == 'Debug') {
-                debugBuild = load ".jenkinsci/debug-steps.groovy"
-                debugBuild.doPostCoverageSonarStep()
+              def cov_platform = ''
+              if (params.Linux) {
+                cov_platform = 'x86_64_aws_cov'
+              }
+              if (!params.Linux && params.MacOS) {
+                cov_platform = 'mac'
+              }
+              if (!params.Linux && !params.MacOS && params.ARMv8) {
+                cov_platform = 'armv8'
+              }
+              else if (!params.Linux && !params.MacOS && !params.ARMv8) {
+                cov_platform = 'armv7'
+              }
+              node(cov_platform) {
+                if (cov_platform == 'mac') {
+                  coverage = load '.jenkinsci/mac-debug-steps.groovy' 
+                }
+                else {
+                  coverage = load '.jenkinsci/debug-steps.groovy'  
+                }
+                coverage.doPostCoverageSonarStep()
               }
             }
           }
@@ -326,7 +385,7 @@ pipeline {
           }
           // build docs on any vacant node. Prefer `x86_64` over
           // others as nodes are more powerful
-          agent { label 'x86_64_aws_cov || arm' }
+          agent { label 'x86_64_aws_cov' }
           steps {
             script {
               def doxygen = load ".jenkinsci/doxygen.groovy"
