@@ -8,7 +8,6 @@
 //                      |-> MacOS                      |-> MacOS
 
 // NOTE: In build stage we differentiate only platforms in pipeline scheme. Build/Release is filtered inside the platform
-// TODO: release build in case branches master/develop (previous pipeline)
 // TODO: limit stage of pipeline for execution: 3 hours
 // (postponed) TODO: limit nightly build pipeline execution for 3 days max
 // (pending) TODO: how to do all types of tests on all platforms (create stage in parallel for each platform and test - 4x5=20?!?!)
@@ -218,7 +217,6 @@ pipeline {
         }
       }
     }
-    // TODO: add cause whether run this step or not 
     stage('Pre-Coverage') {
       when {
         allOf {
@@ -303,7 +301,6 @@ pipeline {
         }
       }
     }
-    // TODO: add cause whether run this step or not 
     stage('Post-Coverage') {
       when {
         allOf {
