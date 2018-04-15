@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-def doReleaseBuild(coverageEnabled=false) {
+def doReleaseBuild() {
   def scmVars = checkout scm
   env.IROHA_VERSION = "0x${scmVars.GIT_COMMIT}"
   env.IROHA_HOME = "/opt/iroha"
