@@ -20,6 +20,7 @@
 #include "builders/protobuf/common_objects/proto_peer_builder.hpp"
 #include "builders/protobuf/transaction.hpp"
 #include "framework/test_subscriber.hpp"
+#include "logger/logger.hpp"
 #include "mock_ordering_service_persistent_state.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_mocks.hpp"
 #include "module/irohad/network/network_mocks.hpp"
@@ -41,6 +42,37 @@ using testing::_;
 using testing::Return;
 
 using wPeer = std::shared_ptr<shared_model::interface::Peer>;
+
+logger::Logger logger_ = logger::log("OrderingServiceImpl");
+
+class OrderingServiceImplProxy : public OrderingServiceImpl {
+ public:
+  using OrderingServiceImpl::OrderingServiceImpl;
+
+  void init() {
+    tx_awaiter_ = tx_await_.get_observable();
+  }
+
+  void onTransaction(
+      std::shared_ptr<shared_model::interface::Transaction> tx) override {
+    OrderingServiceImpl::onTransaction(tx);
+    logger_->info("tx_await_ notify");
+    tx_await_.get_subscriber().on_next(0);
+  }
+
+  template <typename T>
+  void waitTransaction(T t) {
+    try {
+      tx_awaiter_.take(1).as_blocking().count();
+    } catch (std::exception &e) {
+      logger_->warn("Exception at waitTransaction: {}", e.what());
+    }
+  }
+
+ private:
+  rxcpp::subjects::subject<int> tx_await_;
+  rxcpp::observable<int> tx_awaiter_;
+};
 
 // TODO: refactor services to allow dynamic port binding IR-741
 class OrderingGateServiceTest : public ::testing::Test {
@@ -103,7 +135,12 @@ class OrderingGateServiceTest : public ::testing::Test {
   }
 
   TestSubscriber<std::shared_ptr<shared_model::interface::Proposal>> init(
-      size_t times) {
+      std::shared_ptr<OrderingServiceImplProxy> service, size_t times) {
+    service->init();
+    service_transport->subscribe(service);
+
+    start();
+
     auto wrapper = make_test_subscriber<CallExact>(gate->on_proposal(), times);
     gate->on_proposal().subscribe([this](auto proposal) {
       proposal_counter++;
@@ -116,6 +153,7 @@ class OrderingGateServiceTest : public ::testing::Test {
               TestBlockBuilder().build());
       commit_subject_.get_subscriber().on_next(
           rxcpp::observable<>::just(block));
+      logger_->info("on_proposal");
       cv.notify_one();
     });
     wrapper.subscribe();
@@ -137,30 +175,30 @@ class OrderingGateServiceTest : public ::testing::Test {
             .signAndAddSignature(
                 shared_model::crypto::DefaultCryptoAlgorithmType::
                     generateKeypair()));
+    // network may change tx order, so wait until recieving
     gate->propagateTransaction(tx);
-    // otherwise tx may come unordered
-    std::this_thread::sleep_for(20ms);
+    service->waitTransaction(1s);
+    logger_->info("tx_awaiter_ passed");
   }
 
-  void timeoutTick() {
+  void waitProposal(size_t proposal_num) {
     proposal_timeout.get_subscriber().on_next(0);
-  }
-
-  void waitForGate() {
-    std::mutex mtx;
-    std::unique_lock<std::mutex> lock(mtx);
-    cv.wait_for(lock, 1s);
+    std::mutex m;
+    std::unique_lock<std::mutex> lock(m);
+    cv.wait_for(lock, 1s, [this, proposal_num] {
+      return proposal_counter == proposal_num;
+    });
   }
 
   std::string address{"0.0.0.0:50051"};
   std::shared_ptr<OrderingGateImpl> gate;
-  std::shared_ptr<OrderingServiceImpl> service;
+  std::shared_ptr<OrderingServiceImplProxy> service;
 
   /// Peer Communication Service and commit subject are required to emulate
   /// commits for Ordering Service
   std::shared_ptr<MockPeerCommunicationService> pcs_;
   rxcpp::subjects::subject<Commit> commit_subject_;
-  rxcpp::subjects::subject<OrderingServiceImpl::Rep> proposal_timeout;
+  rxcpp::subjects::subject<OrderingServiceImplProxy::Rep> proposal_timeout;
 
   std::vector<std::shared_ptr<shared_model::interface::Proposal>> proposals;
   std::atomic<size_t> proposal_counter;
@@ -188,6 +226,7 @@ TEST_F(OrderingGateServiceTest, SplittingBunchTransactions) {
       .WillRepeatedly(Return(std::vector<wPeer>{peer}));
 
   const size_t max_proposal = 100;
+  const size_t proposal_num = 2;
 
   EXPECT_CALL(*fake_persistent_state, loadProposalHeight())
       .Times(1)
@@ -200,31 +239,26 @@ TEST_F(OrderingGateServiceTest, SplittingBunchTransactions) {
       .Times(1)
       .WillOnce(Return(true));
 
-  service =
-      std::make_shared<OrderingServiceImpl>(wsv,
-                                            max_proposal,
-                                            proposal_timeout.get_observable(),
-                                            service_transport,
-                                            fake_persistent_state);
-  service_transport->subscribe(service);
-
-  start();
-  auto wrapper = init(2);
+  service = std::make_shared<OrderingServiceImplProxy>(
+      wsv,
+      max_proposal,
+      proposal_timeout.get_observable(),
+      service_transport,
+      fake_persistent_state);
+  auto wrapper = init(service, proposal_num);
 
   for (size_t i = 0; i < 8; ++i) {
     send_transaction(i + 1);
   }
 
-  timeoutTick();
+  waitProposal(1);
   send_transaction(9);
   send_transaction(10);
-  timeoutTick();
+  waitProposal(2);
 
-  waitForGate();
-  ASSERT_EQ(proposals.size(), 2);
+  ASSERT_EQ(proposals.size(), proposal_num);
   ASSERT_EQ(proposals.at(0)->transactions().size(), 8);
   ASSERT_EQ(proposals.at(1)->transactions().size(), 2);
-  ASSERT_EQ(proposal_counter, 2);
   ASSERT_TRUE(wrapper.validate());
 
   size_t i = 1;
@@ -247,6 +281,7 @@ TEST_F(OrderingGateServiceTest, ProposalsReceivedWhenProposalSize) {
       .WillRepeatedly(Return(std::vector<wPeer>{peer}));
 
   const size_t max_proposal = 5;
+  const size_t proposal_num = 2;
 
   EXPECT_CALL(*fake_persistent_state, loadProposalHeight())
       .Times(1)
@@ -259,27 +294,22 @@ TEST_F(OrderingGateServiceTest, ProposalsReceivedWhenProposalSize) {
       .Times(1)
       .WillOnce(Return(true));
 
-  service =
-      std::make_shared<OrderingServiceImpl>(wsv,
-                                            max_proposal,
-                                            proposal_timeout.get_observable(),
-                                            service_transport,
-                                            fake_persistent_state);
-  service_transport->subscribe(service);
-
-  start();
-  auto wrapper = init(2);
+  service = std::make_shared<OrderingServiceImplProxy>(
+      wsv,
+      max_proposal,
+      proposal_timeout.get_observable(),
+      service_transport,
+      fake_persistent_state);
+  auto wrapper = init(service, proposal_num);
 
   for (size_t i = 0; i < 10; ++i) {
     send_transaction(i + 1);
   }
 
-  timeoutTick();
+  waitProposal(2);
 
-  waitForGate();
   ASSERT_TRUE(wrapper.validate());
-  ASSERT_EQ(proposals.size(), 2);
-  ASSERT_EQ(proposal_counter, 2);
+  ASSERT_EQ(proposals.size(), proposal_num);
 
   size_t i = 1;
   for (auto &&proposal : proposals) {
@@ -300,7 +330,8 @@ TEST_F(OrderingGateServiceTest, BatchOfSingleTxProposal) {
       .WillRepeatedly(Return(std::vector<wPeer>{peer}));
 
   const size_t max_proposal = 1;
-  const size_t times = 100;
+  const size_t times = 10;
+  const size_t proposal_num = times / max_proposal;
 
   int height_cnt = 2;
   EXPECT_CALL(*fake_persistent_state, loadProposalHeight())
@@ -309,27 +340,22 @@ TEST_F(OrderingGateServiceTest, BatchOfSingleTxProposal) {
   EXPECT_CALL(*fake_persistent_state, saveProposalHeight(_))
       .WillRepeatedly(Return(true));
 
-  service =
-      std::make_shared<OrderingServiceImpl>(wsv,
-                                            max_proposal,
-                                            proposal_timeout.get_observable(),
-                                            service_transport,
-                                            fake_persistent_state);
-  service_transport->subscribe(service);
-
-  start();
-  auto wrapper = init(times);
+  service = std::make_shared<OrderingServiceImplProxy>(
+      wsv,
+      max_proposal,
+      proposal_timeout.get_observable(),
+      service_transport,
+      fake_persistent_state);
+  auto wrapper = init(service, proposal_num);
 
   for (size_t i = 0; i < times; ++i) {
     send_transaction(i + 1);
   }
 
-  timeoutTick();
+  waitProposal(proposal_num);
 
-  waitForGate();
   ASSERT_TRUE(wrapper.validate());
-  ASSERT_EQ(proposals.size(), times);
-  ASSERT_EQ(proposal_counter, times);
+  ASSERT_EQ(proposals.size(), proposal_num);
 
   size_t i = 1;
   for (auto &&proposal : proposals) {
