@@ -27,10 +27,10 @@ limitations under the License.
 #include "model/converters/pb_common.hpp"
 
 #include "main/server_runner.hpp"
-#include "validators/permissions.hpp"
 #include "torii/processor/query_processor_impl.hpp"
 #include "torii/query_client.hpp"
 #include "torii/query_service.hpp"
+#include "validators/permissions.hpp"
 
 #include "builders/protobuf/queries.hpp"
 #include "cryptography/crypto_provider/crypto_defaults.hpp"
@@ -233,7 +233,8 @@ TEST_F(ToriiQueriesTest, FindAccountWhenHasRolePermission) {
       shared_model::proto::AccountBuilder().accountId("accountA").build());
 
   auto creator = "a@domain";
-  EXPECT_CALL(*wsv_query, getAccount(creator)).WillOnce(Return(account));
+  EXPECT_CALL(*wsv_query, getAccount(creator))
+      .WillOnce(Return(account));
   EXPECT_CALL(*wsv_query, getSignatories(creator))
       .WillRepeatedly(Return(signatories));
   std::vector<std::string> roles = {"test"};

@@ -97,18 +97,29 @@ namespace iroha {
 
     boost::optional<std::shared_ptr<shared_model::interface::Account>>
     PostgresWsvQuery::getAccount(const AccountIdType &account_id) {
-      return execute_("SELECT * FROM account WHERE account_id = "
-                      + transaction_.quote(account_id) + ";")
-                 | [&](const auto &result)
-                 -> boost::optional<
-                     std::shared_ptr<shared_model::interface::Account>> {
-        if (result.empty()) {
-          log_->info(kAccountNotFound, account_id);
-          return boost::none;
-        }
+      return execute_("WITH acc AS (SELECT * FROM account WHERE account_id = " + transaction_.quote(account_id) + "),"
+                          "acc_key AS ((SELECT account_id, jsonb_object_keys(data) AS key FROM acc) UNION (SELECT account_id, '' AS key FROM acc))"
+                          "SELECT account_id, domain_id, quorum, transaction_count, json.data AS data FROM"
+                          "("
+                          "    SELECT (SELECT COALESCE(json_object_agg(kva.key, kva.nest_key), '{}')) AS data FROM"
+                          "    ("
+                          "        SELECT key, array_agg(nest_key) AS nest_key FROM"
+                          "        ("
+                          "            SELECT key, jsonb_object_keys(data->key) AS nest_key FROM acc_key, acc"
+                          "        ) AS t"
+                          "        GROUP BY key"
+                          "    ) AS kva"
+                          ") AS json, acc;")
+          | [&](const auto &result)
+              -> boost::optional<
+                  std::shared_ptr<shared_model::interface::Account>> {
+            if (result.empty()) {
+              log_->info(kAccountNotFound, account_id);
+              return boost::none;
+            }
 
-        return fromResult(makeAccount(result.at(0)));
-      };
+            return fromResult(makeAccount(result.at(0)));
+          };
     }
 
     boost::optional<std::string> PostgresWsvQuery::getAccountDetail(

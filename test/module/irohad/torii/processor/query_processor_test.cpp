@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include "validators/permissions.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_mocks.hpp"
 #include "module/irohad/validation/validation_mocks.hpp"
+#include "validators/permissions.hpp"
 
 #include "framework/test_subscriber.hpp"
 #include "model/queries/responses/error_response.hpp"
@@ -36,9 +36,9 @@ using namespace iroha::ametsuchi;
 using namespace iroha::validation;
 using namespace framework::test_subscriber;
 
+using ::testing::_;
 using ::testing::A;
 using ::testing::Return;
-using ::testing::_;
 
 class QueryProcessorTest : public ::testing::Test {
  public:
