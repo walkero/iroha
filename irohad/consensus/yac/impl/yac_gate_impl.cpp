@@ -121,6 +121,7 @@ namespace iroha {
                     })
                     // need only the first
                     .first()
+                    .retry()
                     .subscribe(
                         // if load is successful from at least one node
                         [this, subscriber, model_hash](auto block) {
