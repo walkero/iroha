@@ -22,7 +22,7 @@ def doReleaseBuild() {
   sh "mkdir /tmp/${env.GIT_COMMIT}-${BUILD_NUMBER} || true"
   iC.inside(""
     + " -v /tmp/${GIT_COMMIT}-${BUILD_NUMBER}:/tmp/${GIT_COMMIT}"
-    + " -v /var/jenkins/ccache:${CCACHE_RELEASE_DIR}") {
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
     def scmVars = checkout scm
     env.IROHA_VERSION = "0x${scmVars.GIT_COMMIT}"

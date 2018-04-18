@@ -35,7 +35,7 @@ def doDebugBuild(coverageEnabled=false) {
     + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
     def scmVars = checkout scm
     def cmakeOptions = ""
@@ -74,11 +74,11 @@ def doPreCoverageStep() {
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
   iC.inside(""
-    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
+    // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    // + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    // + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
       
       sh "cmake --build build --target coverage.init.info"
   }
@@ -105,7 +105,7 @@ def doTestStep() {
     + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
     + " --network=${env.IROHA_NETWORK}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
       def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
       if (testExitCode != 0) {
@@ -122,11 +122,11 @@ def doPostCoverageCoberturaStep() {
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
   iC.inside(""
-    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
+    // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    // + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    // + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
         sh "cmake --build build --target coverage.info"
         sh "python /tmp/lcov_cobertura.py build/reports/coverage.info -o build/reports/coverage.xml"
@@ -143,11 +143,11 @@ def doPostCoverageSonarStep() {
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
   iC.inside(""
-    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " -v /var/jenkins/ccache:${CCACHE_DIR}") {
+    // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    // + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    // + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
       sh "cmake --build build --target cppcheck"
       // Sonar
