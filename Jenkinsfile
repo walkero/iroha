@@ -15,6 +15,7 @@
 // (postponed) TODO: limit nightly build pipeline execution for 3 days max
 // (pending) TODO: how to do all types of tests on all platforms (create stage in parallel for each platform and test - 4x5=20?!?!)
 // TODO: upload artifacts at the post stage of each platform
+// (urgent) TODO: add /opt/.ccache somehow to the agent (such that it could be mounted as a volume to docker)
 
 properties([parameters([
   choice(choices: 'Debug\nRelease', description: '', name: 'BUILD_TYPE'),
