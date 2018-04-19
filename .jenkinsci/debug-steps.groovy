@@ -15,6 +15,7 @@ def doDebugBuild(coverageEnabled=false) {
     parallelism = 1
   }
 
+  sh "echo ${env.NODE_NAME}"
   def platform = sh(script: 'uname -m', returnStdout: true).trim()
   sh "curl -L -o /tmp/${env.GIT_COMMIT}/Dockerfile --create-dirs https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile"
   // pull docker image in case we don't have one
