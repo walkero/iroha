@@ -25,14 +25,13 @@ def doDebugBuild(coverageEnabled=false) {
   def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
   dockerAgentDockerImage = iC.imageName()
-
+  dockerImageFile = sh(script: "echo ${GIT_COMMIT} | cut -c 1-8", returnStdout: true).trim()
   sh "echo ${dockerAgentDockerImage}"
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh 'echo node name case'
-    sh 'docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage} ${dockerAgentDockerImage}'
+      sh 'docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} ${dockerAgentDockerImage}'
   }
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
@@ -73,7 +72,7 @@ def doDebugBuild(coverageEnabled=false) {
 
 def doPreCoverageStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh 'docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
+    sh 'docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
@@ -98,7 +97,7 @@ def doTestStep() {
   //   + " --network=${env.IROHA_NETWORK}")
   
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   def path = sh(script: 'pwd', returnStdout: true);
@@ -121,7 +120,7 @@ def doTestStep() {
 
 def doPostCoverageCoberturaStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
@@ -142,7 +141,7 @@ def doPostCoverageCoberturaStep() {
 
 def doPostCoverageSonarStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""

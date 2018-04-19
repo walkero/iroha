@@ -49,6 +49,7 @@ pipeline {
     IROHA_POSTGRES_PORT = 5432
 
     dockerAgentDockerImage = ''
+    dockerImageFile = ''
     workspace_path = ''
   }
 
