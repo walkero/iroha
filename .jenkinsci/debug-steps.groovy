@@ -73,7 +73,7 @@ def doDebugBuild(coverageEnabled=false) {
 
 def doPreCoverageStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
+    sh "docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
@@ -100,7 +100,7 @@ def doTestStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
-  def iC = docker.image("${env.dockerAgentDockerImage}")
+  def iC = docker.image("${dockerAgentDockerImage}")
   def path = sh(script: 'pwd', returnStdout: true);
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
@@ -123,7 +123,7 @@ def doPostCoverageCoberturaStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
-  def iC = docker.image("${env.dockerAgentDockerImage}")
+  def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
   //   // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
   //   // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
@@ -142,9 +142,9 @@ def doPostCoverageCoberturaStep() {
 
 def doPostCoverageSonarStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
+    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
-  def iC = docker.image("${env.dockerAgentDockerImage}")
+  def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
   //   // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
   //   // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
