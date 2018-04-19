@@ -21,17 +21,18 @@ def doDebugBuild(coverageEnabled=false) {
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
-  def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
-  def iC = dPullOrBuild.dockerPullOrUpdate()
+  // def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
+  // def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
-  dockerAgentDockerImage = iC.imageName()
+  // dockerAgentDockerImage = iC.imageName()
 
   sh "echo ${dockerAgentDockerImage}" 
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
-  if ("x86_64_aws_build" in env.NODE_NAME) {
-    sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
-  }
+  sh "echo ${env.NODE_NAME}"
+  // if ("x86_64_aws_build" in env.NODE_NAME) {
+  //   sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
+  // }
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
   //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
