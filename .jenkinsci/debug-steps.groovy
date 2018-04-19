@@ -26,12 +26,13 @@ def doDebugBuild(coverageEnabled=false) {
   // TODO: check if this works for global
   dockerAgentDockerImage = iC.imageName()
 
-  sh "echo ${dockerAgentDockerImage}" 
+  sh "echo ${dockerAgentDockerImage}"
+  sh 'echo ${env.NODE_NAME}' 
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
-  if ("x86_64_build_agent" in env.NODE_NAME) {
-    sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+    sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage} ${dockerAgentDockerImage}"
   }
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
@@ -71,11 +72,10 @@ def doDebugBuild(coverageEnabled=false) {
 
 
 def doPreCoverageStep() {
-  sh "echo ${dockerAgentDockerImage}"
-  if ("x86_64_coverage_agent" in env.NODE_NAME) {
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
-  def iC = docker.image("${env.dockerAgentDockerImage}")
+  def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
   //   // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
   //   // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
@@ -91,15 +91,14 @@ def doPreCoverageStep() {
 // now there are only unit tests running      
 def doTestStep() {
   sh "docker network create ${env.IROHA_NETWORK}"
-  sh "echo ${dockerAgentDockerImage}"
   // docker.image('postgres:9.5').run(""
   //   + " -e POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
   //   + " -e POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
   //   + " --name ${env.IROHA_POSTGRES_HOST}"
   //   + " --network=${env.IROHA_NETWORK}")
   
-  if ("x86_64_test_agent" in env.NODE_NAME) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
   def path = sh(script: 'pwd', returnStdout: true);
@@ -121,8 +120,8 @@ def doTestStep() {
 
 
 def doPostCoverageCoberturaStep() {
-  if ("x86_64_coverage_agent" in env.NODE_NAME) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
   // iC.inside(""
@@ -142,7 +141,7 @@ def doPostCoverageCoberturaStep() {
 
 
 def doPostCoverageSonarStep() {
-  if ("x86_64_sonarqube_agent" in env.NODE_NAME) {
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
