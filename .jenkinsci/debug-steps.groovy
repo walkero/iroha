@@ -27,11 +27,11 @@ def doDebugBuild(coverageEnabled=false) {
   dockerAgentDockerImage = iC.imageName()
 
   sh "echo ${dockerAgentDockerImage}"
-  sh 'echo ${env.NODE_NAME}' 
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+    sh 'echo node name case'
     sh 'docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage} ${dockerAgentDockerImage}'
   }
   // iC.inside(""
