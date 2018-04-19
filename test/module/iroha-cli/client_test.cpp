@@ -15,11 +15,6 @@
  * limitations under the License.
  */
 
-#include <responses.pb.h>
-
-#include <endpoint.pb.h>
-
-#include "builders/protobuf/common_objects/proto_account_builder.hpp"
 #include "model/sha3_hash.hpp"
 #include "module/irohad/ametsuchi/ametsuchi_mocks.hpp"
 #include "module/irohad/network/network_mocks.hpp"
@@ -55,8 +50,6 @@ using ::testing::Return;
 using namespace iroha::ametsuchi;
 using namespace iroha::network;
 using namespace iroha::validation;
-using namespace iroha::model::converters;
-using namespace iroha::model;
 using namespace shared_model::proto;
 using namespace shared_model::permissions;
 
@@ -129,7 +122,6 @@ TEST_F(ClientServerTest, SendTxWhenValid) {
 
   auto shm_tx = shared_model::proto::TransactionBuilder()
                     .creatorAccountId("some@account")
-                    .txCounter(1)
                     .createdTime(iroha::time::now())
                     .setAccountQuorum("some@account", 2)
                     .build()
@@ -156,8 +148,8 @@ TEST_F(ClientServerTest, SendTxWhenInvalidJson) {
             }
           }]
         })";
-  JsonTransactionFactory tx_factory;
-  auto json_doc = stringToJson(json_string);
+  iroha::model::converters::JsonTransactionFactory tx_factory;
+  auto json_doc = iroha::model::converters::stringToJson(json_string);
   ASSERT_TRUE(json_doc);
   auto model_tx = tx_factory.deserialize(json_doc.value());
   ASSERT_FALSE(model_tx);
@@ -167,7 +159,6 @@ TEST_F(ClientServerTest, SendTxWhenStatelessInvalid) {
   // creating stateless invalid tx
   auto shm_tx = TestTransactionBuilder()
                     .creatorAccountId("some@account")
-                    .txCounter(1)
                     .createdTime(iroha::time::now())
                     .setAccountQuorum("some@@account", 2)
                     .build();
@@ -199,7 +190,7 @@ TEST_F(ClientServerTest, SendQueryWhenInvalidJson) {
           }]
         })";
 
-  JsonQueryFactory queryFactory;
+  iroha::model::converters::JsonQueryFactory queryFactory;
   auto model_query = queryFactory.deserialize(json_query);
   ASSERT_FALSE(model_query);
 }
@@ -226,8 +217,6 @@ TEST_F(ClientServerTest, SendQueryWhenStatelessInvalid) {
 TEST_F(ClientServerTest, SendQueryWhenValid) {
   // TODO: 30/04/2018 x3medima17, fix Uninteresting mock function call, IR-1187
   iroha_cli::CliClient client(Ip, Port);
-  auto account_admin = iroha::model::Account();
-  account_admin.account_id = "admin@test";
 
   std::shared_ptr<shared_model::interface::Account> account_test = clone(
       shared_model::proto::AccountBuilder().accountId("test@test").build());
@@ -242,6 +231,9 @@ TEST_F(ClientServerTest, SendQueryWhenValid) {
 
   EXPECT_CALL(*wsv_query, getAccountDetail("test@test"))
       .WillOnce(Return(boost::make_optional(std::string("value"))));
+
+  EXPECT_CALL(*wsv_query, getAccountRoles("admin@test"))
+      .WillOnce(Return(boost::none));
 
   auto query = QueryBuilder()
                    .createdTime(iroha::time::now())
@@ -258,8 +250,6 @@ TEST_F(ClientServerTest, SendQueryWhenValid) {
 
 TEST_F(ClientServerTest, SendQueryWhenStatefulInvalid) {
   iroha_cli::CliClient client(Ip, Port);
-  auto account_admin = iroha::model::Account();
-  account_admin.account_id = "admin@test";
 
   auto account_test = iroha::model::Account();
   account_test.account_id = "test@test";
@@ -271,6 +261,9 @@ TEST_F(ClientServerTest, SendQueryWhenStatefulInvalid) {
               hasAccountGrantablePermission(
                   "admin@test", "test@test", can_get_my_acc_detail))
       .WillOnce(Return(false));
+
+  EXPECT_CALL(*wsv_query, getAccountRoles("admin@test"))
+      .WillOnce(Return(boost::none));
 
   auto query = QueryBuilder()
                    .createdTime(iroha::time::now())
