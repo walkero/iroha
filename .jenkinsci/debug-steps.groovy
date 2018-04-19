@@ -15,7 +15,6 @@ def doDebugBuild(coverageEnabled=false) {
     parallelism = 1
   }
 
-  sh "echo ${env.NODE_NAME}"
   def platform = sh(script: 'uname -m', returnStdout: true).trim()
   sh "curl -L -o /tmp/${env.GIT_COMMIT}/Dockerfile --create-dirs https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile"
   // pull docker image in case we don't have one
@@ -31,9 +30,9 @@ def doDebugBuild(coverageEnabled=false) {
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
-  // if ("x86_64_aws_build" in env.NODE_NAME) {
-  //   sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
-  // }
+  if ("x86_64_build_agent" in env.NODE_NAME) {
+    sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
+  }
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
   //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
@@ -73,7 +72,7 @@ def doDebugBuild(coverageEnabled=false) {
 
 def doPreCoverageStep() {
   sh "echo ${dockerAgentDockerImage}"
-  if ("x86_64_aws_cov" in env.NODE_NAME) {
+  if ("x86_64_coverage_agent" in env.NODE_NAME) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
@@ -99,7 +98,7 @@ def doTestStep() {
   //   + " --name ${env.IROHA_POSTGRES_HOST}"
   //   + " --network=${env.IROHA_NETWORK}")
   
-  if ("x86_64_aws_test" in env.NODE_NAME) {
+  if ("x86_64_test_agent" in env.NODE_NAME) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
@@ -122,7 +121,7 @@ def doTestStep() {
 
 
 def doPostCoverageCoberturaStep() {
-  if ("x86_64_aws_cov" in env.NODE_NAME) {
+  if ("x86_64_coverage_agent" in env.NODE_NAME) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
@@ -143,7 +142,7 @@ def doPostCoverageCoberturaStep() {
 
 
 def doPostCoverageSonarStep() {
-  if ("x86_64_aws_sonar" in env.NODE_NAME) {
+  if ("x86_64_sonarqube_agent" in env.NODE_NAME) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage}"
   }
   def iC = docker.image("${env.dockerAgentDockerImage}")
