@@ -33,40 +33,40 @@ def doDebugBuild(coverageEnabled=false) {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
       sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} ${dockerAgentDockerImage}"
   }
-  // iC.inside(""
-  //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-  //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-  //   + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  iC.inside(""
+    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-  //   def scmVars = checkout scm
-  //   def cmakeOptions = ""
-  //   if ( coverageEnabled ) {
-  //     cmakeOptions = " -DCOVERAGE=ON "
-  //   }
-  //   env.IROHA_VERSION = "0x${scmVars.GIT_COMMIT}"
-  //   env.IROHA_HOME = "/opt/iroha"
-  //   env.IROHA_BUILD = "${env.IROHA_HOME}/build"
+    def scmVars = checkout scm
+    def cmakeOptions = ""
+    if ( coverageEnabled ) {
+      cmakeOptions = " -DCOVERAGE=ON "
+    }
+    env.IROHA_VERSION = "0x${scmVars.GIT_COMMIT}"
+    env.IROHA_HOME = "/opt/iroha"
+    env.IROHA_BUILD = "${env.IROHA_HOME}/build"
 
-  //   sh """
-  //     ccache --version
-  //     ccache --show-stats
-  //     ccache --zero-stats
-  //     ccache --max-size=5G
-  //   """  
-  //   sh """
-  //     cmake \
-  //       -DTESTING=ON \
-  //       -H. \
-  //       -Bbuild \
-  //       -DCMAKE_BUILD_TYPE=Debug \
-  //       -DIROHA_VERSION=${env.IROHA_VERSION} \
-  //       ${cmakeOptions}
-  //   """
-  //   sh "cmake --build build -- -j${parallelism}"
-  //   sh "ccache --show-stats"
-  // }
+    sh """
+      ccache --version
+      ccache --show-stats
+      ccache --zero-stats
+      ccache --max-size=5G
+    """  
+    sh """
+      cmake \
+        -DTESTING=ON \
+        -H. \
+        -Bbuild \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DIROHA_VERSION=${env.IROHA_VERSION} \
+        ${cmakeOptions}
+    """
+    sh "cmake --build build -- -j${parallelism}"
+    sh "ccache --show-stats"
+  }
 }
 
 
@@ -101,20 +101,20 @@ def doTestStep() {
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   def path = sh(script: 'pwd', returnStdout: true);
-  // iC.inside(""
-  //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-  //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-  //   + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " --network=${env.IROHA_NETWORK}"
-  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  iC.inside(""
+    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " --network=${env.IROHA_NETWORK}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-  //     def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
-  //     if (testExitCode != 0) {
-  //       currentBuild.result = "UNSTABLE"
-  //     }
-  //     return
-  // }
+      def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
+      if (testExitCode != 0) {
+        currentBuild.result = "UNSTABLE"
+      }
+      return
+  }
 }
 
 

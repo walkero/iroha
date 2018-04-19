@@ -1,6 +1,6 @@
 FROM ubuntu:16.04
 
-# number of concurrent threads during build
+# number of concurrent threads during a build
 # usage: docker build --build-arg PARALLELISM=8 -t name/name .
 ARG PARALLELISM=1
 ARG CMAKE_BUILD_TYPE=Release
