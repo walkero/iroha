@@ -32,7 +32,7 @@ def doDebugBuild(coverageEnabled=false) {
   // TODO: check if it works
 
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage} ${dockerAgentDockerImage}"
+    sh 'docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage} ${dockerAgentDockerImage}'
   }
   // iC.inside(""
   //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
@@ -73,7 +73,7 @@ def doDebugBuild(coverageEnabled=false) {
 
 def doPreCoverageStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
+    sh 'docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
@@ -98,7 +98,7 @@ def doTestStep() {
   //   + " --network=${env.IROHA_NETWORK}")
   
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   def path = sh(script: 'pwd', returnStdout: true);
@@ -121,7 +121,7 @@ def doTestStep() {
 
 def doPostCoverageCoberturaStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
@@ -142,7 +142,7 @@ def doPostCoverageCoberturaStep() {
 
 def doPostCoverageSonarStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
-    sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}"
+    sh 'docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerAgentDockerImage}'
   }
   def iC = docker.image("${dockerAgentDockerImage}")
   // iC.inside(""
