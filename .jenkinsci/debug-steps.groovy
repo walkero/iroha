@@ -15,21 +15,22 @@ def doDebugBuild(coverageEnabled=false) {
     parallelism = 1
   }
 
+  sh "echo ${env.NODE_NAME}"
   def platform = sh(script: 'uname -m', returnStdout: true).trim()
   sh "curl -L -o /tmp/${env.GIT_COMMIT}/Dockerfile --create-dirs https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile"
   // pull docker image in case we don't have one
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
-  // def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
-  // def iC = dPullOrBuild.dockerPullOrUpdate()
+  def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
+  def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
-  // dockerAgentDockerImage = iC.imageName()
+  dockerAgentDockerImage = iC.imageName()
 
   sh "echo ${dockerAgentDockerImage}" 
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
-  sh "echo ${env.NODE_NAME}"
+
   // if ("x86_64_aws_build" in env.NODE_NAME) {
   //   sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${env.dockerAgentDockerImage} ${env.dockerAgentDockerImage}"
   // }
