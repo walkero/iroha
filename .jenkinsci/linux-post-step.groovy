@@ -1,3 +1,14 @@
+#!/usr/bin/env groovy
+
+def linuxPostBuildSuccessStep() {
+  def cleanup = load ".jenkinsci/docker-cleanup.groovy"
+  cleanup.doDockerCleanup()
+}
+
+def linuxPostBuildFailureStep() {
+  linuxPostStep()
+}
+
 def linuxPostStep() {
   timeout(time: 600, unit: "SECONDS") {
     try {

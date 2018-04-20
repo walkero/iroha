@@ -111,14 +111,14 @@ pipeline {
           post {
             success {
               script {
-              //TODO: develop handling successful build for x86_64
-                sh 'echo build was successful'
+                def post = load ".jenkinsci/linux-post-step.groovy"
+                post.linuxPostBuildSuccessStep()
               }
             }
-            always {
+            failure {
               script {
                 def post = load ".jenkinsci/linux-post-step.groovy"
-                post.linuxPostStep()
+                post.linuxPostBuildFailureStep()
               }
             }
           }

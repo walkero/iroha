@@ -26,7 +26,6 @@ def doDebugBuild(coverageEnabled=false) {
   // TODO: check if this works for global
   dockerAgentDockerImage = iC.imageName()
   dockerImageFile = sh(script: "echo ${GIT_COMMIT} | cut -c 1-8", returnStdout: true).trim()
-  sh "echo ${dockerAgentDockerImage} ${dockerImageFile}"
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
@@ -66,6 +65,7 @@ def doDebugBuild(coverageEnabled=false) {
     """
     sh "cmake --build build -- -j${parallelism}"
     sh "ccache --show-stats"
+    sh "pwd; ls"
   }
 }
 
@@ -90,6 +90,7 @@ def doPreCoverageStep() {
 // now there are only unit tests running      
 def doTestStep() {
   sh "docker network create ${env.IROHA_NETWORK}"
+  sh "pwd; ls"
   // docker.image('postgres:9.5').run(""
   //   + " -e POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
   //   + " -e POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
@@ -99,22 +100,22 @@ def doTestStep() {
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}"
   }
-  def iC = docker.image("${dockerAgentDockerImage}")
-  def path = sh(script: 'pwd', returnStdout: true);
-  iC.inside(""
-    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-    + " --network=${env.IROHA_NETWORK}"
-    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  // def iC = docker.image("${dockerAgentDockerImage}")
+  // def path = sh(script: 'pwd', returnStdout: true);
+  // iC.inside(""
+  //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+  //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+  //   + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+  //   + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+  //   + " --network=${env.IROHA_NETWORK}"
+  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-      def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
-      if (testExitCode != 0) {
-        currentBuild.result = "UNSTABLE"
-      }
-      return
-  }
+  //     def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
+  //     if (testExitCode != 0) {
+  //       currentBuild.result = "UNSTABLE"
+  //     }
+  //     return
+  // }
 }
 
 
