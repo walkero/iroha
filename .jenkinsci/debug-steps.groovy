@@ -25,7 +25,6 @@ def doDebugBuild(coverageEnabled=false) {
   def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
   def iC = dPullOrBuild.dockerPullOrUpdate()
   dockerAgentDockerImage = iC.imageName()
-
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
       sh "docker save -o ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} ${dockerAgentDockerImage}"
   }
@@ -84,31 +83,31 @@ def doPreCoverageStep() {
 def doTestStep() {
   sh "docker network create ${env.IROHA_NETWORK}"
   sh "pwd; ls"
-  // docker.image('postgres:9.5').run(""
-  //   + " -e POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   + " -e POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " --name ${env.IROHA_POSTGRES_HOST}"
-  //   + " --network=${env.IROHA_NETWORK}")
+  docker.image('postgres:9.5').run(""
+    + " -e POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    + " -e POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " --name ${env.IROHA_POSTGRES_HOST}"
+    + " --network=${env.IROHA_NETWORK}")
   
   if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}"
   }
-  // def iC = docker.image("${dockerAgentDockerImage}")
-  // def path = sh(script: 'pwd', returnStdout: true);
-  // iC.inside(""
-  //   + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-  //   + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-  //   + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " --network=${env.IROHA_NETWORK}"
-  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  def iC = docker.image("${dockerAgentDockerImage}")
+  def path = sh(script: 'pwd', returnStdout: true);
+  iC.inside(""
+    + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
+    + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
+    + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
+    + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
+    + " --network=${env.IROHA_NETWORK}"
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-  //     def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
-  //     if (testExitCode != 0) {
-  //       currentBuild.result = "UNSTABLE"
-  //     }
-  //     return
-  // }
+      def testExitCode = sh(script: 'cmake --build build --target test', returnStatus: true)
+      if (testExitCode != 0) {
+        currentBuild.result = "UNSTABLE"
+      }
+      return
+  }
 }
 
 

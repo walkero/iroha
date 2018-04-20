@@ -32,7 +32,6 @@ def dockerPullOrUpdate() {
       iC.pull()
     }
     else {
-      sh "echo went to first-else"
       // first commit in this branch or Dockerfile modified
       if (remoteFilesDiffer("https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile", 
         "https://raw.githubusercontent.com/hyperledger/iroha/develop/docker/develop/${platform}/Dockerfile")) {
