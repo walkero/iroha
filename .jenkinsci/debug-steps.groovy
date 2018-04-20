@@ -21,11 +21,11 @@ def doDebugBuild(coverageEnabled=false) {
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
+  dockerImageFile = sh(script: "echo ${GIT_COMMIT} | cut -c 1-8", returnStdout: true).trim()
   def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
   def iC = dPullOrBuild.dockerPullOrUpdate()
   // TODO: check if this works for global
   dockerAgentDockerImage = iC.imageName()
-  dockerImageFile = sh(script: "echo ${GIT_COMMIT} | cut -c 1-8", returnStdout: true).trim()
   // (done) TODO: save the image to the AWS EFS only in case we are only in Linux x86_64
   // TODO: check if it works
 
