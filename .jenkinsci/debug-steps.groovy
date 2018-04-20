@@ -9,7 +9,7 @@ def doDebugBuild(coverageEnabled=false) {
   // So just set this to same value as default. 
   // This is a known bug. See https://issues.jenkins-ci.org/browse/JENKINS-41929
   if (parallelism == null) {
-    parallelism = 4
+    parallelism = 8
   }
   if ("arm7" in env.NODE_NAME) {
     parallelism = 1
