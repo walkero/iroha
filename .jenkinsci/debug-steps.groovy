@@ -21,7 +21,7 @@ def doDebugBuild(coverageEnabled=false) {
   // speeds up consequent image builds as we simply tag them
   sh "docker pull ${DOCKER_BASE_IMAGE_DEVELOP}"
   // TODO: check if workspace_path is saved and used later on
-  dockerImageFile = sh(script: "echo ${BRANCH_NAME} | cut -c 1-8", returnStdout: true).trim()
+  dockerImageFile = sh(script: "echo ${BRANCH_NAME} | md5sum | cut -c 1-8", returnStdout: true).trim()
   def dPullOrBuild = load '.jenkinsci/docker-pull-or-build.groovy'
   def iC = dPullOrBuild.dockerPullOrUpdate()
   dockerAgentDockerImage = iC.imageName()
