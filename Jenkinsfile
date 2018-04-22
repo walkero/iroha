@@ -22,7 +22,7 @@ properties([parameters([
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
   booleanParam(defaultValue: false, description: 'Whether build Python bindings', name: 'PythonBindings'),
   choice(choices: 'Release\nDebug', description: 'Python Bindings Build Type', name: 'PBBuildType'),
-  booleanParam(defaultValue: true, description: 'Whether build Android bindings', name: 'AndroidBindings'),
+  booleanParam(defaultValue: false, description: 'Whether build Android bindings', name: 'AndroidBindings'),
   choice(choices: '26\n25\n24\n23\n22\n21\n20\n19\n18\n17\n16\n15\n14', description: 'Android Bindings ABI Version', name: 'ABABIVersion'),
   choice(choices: 'Release\nDebug', description: 'Android Bindings Build Type', name: 'ABBuildType'),
   choice(choices: 'arm64-v8a\narmeabi-v7a\narmeabi\nx86_64\nx86', description: 'Android Bindings Platform', name: 'ABPlatform'),
