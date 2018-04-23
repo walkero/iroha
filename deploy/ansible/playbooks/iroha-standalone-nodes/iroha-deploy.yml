@@ -2,7 +2,7 @@
   - hosts: localhost
     connection: local
     roles:
-      - { role: iroha-standalone-config-gen }
+      - { role: iroha-standalone-config-gen, tags: iroha-standalone-config-gen }
 
   - hosts: all
     gather_facts: False

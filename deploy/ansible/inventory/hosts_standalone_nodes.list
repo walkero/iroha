@@ -10,6 +10,7 @@
 # NOTE: 1) you can create more than one group, but you still have to increment it throughout the inventory file.
 
 [iroha-nodes]
-iroha-1 ansible_host=0.0.0.0 ansible_user=root key=0
-iroha-2 ansible_host=0.0.0.0 ansible_user=root key=1
-iroha-3 ansible_host=0.0.0.0 ansible_user=root key=2
+iroha-1 ansible_host=207.148.70.51 ansible_user=root key=0
+iroha-2 ansible_host=207.148.78.66 ansible_user=root key=1
+iroha-3 ansible_host=207.148.121.67 ansible_user=root key=2
+iroha-4 ansible_host=207.148.78.165 ansible_user=root key=3
