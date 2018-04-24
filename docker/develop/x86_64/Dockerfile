@@ -26,7 +26,7 @@ RUN set -e; \
         # CI dependencies
         git ssh tar gzip ca-certificates \
         # Pythons
-        python3-pip python3-setuptools python-dev \
+        python-pip python3-pip python3-setuptools python-dev \
         # SWIG dependencies
         libpcre3-dev autoconf bison  \
         # other
@@ -35,7 +35,8 @@ RUN set -e; \
     apt-get -y clean
 
 # install cmake 3.10.2
-RUN git clone https://gitlab.kitware.com/cmake/cmake.git /tmp/cmake; \
+RUN set -e; \
+    git clone https://gitlab.kitware.com/cmake/cmake.git /tmp/cmake; \
     (cd /tmp/cmake ; git checkout c1e087a9d3af74299d7681c9f9de59e5977a1539); \
     (cd /tmp/cmake ; /tmp/cmake/bootstrap --system-curl --parallel=${PARALLELISM} --enable-ccache); \
     make -j${PARALLELISM} -C /tmp/cmake; \
@@ -236,34 +237,38 @@ RUN set -e; \
     rm -rf /tmp/ed25519
 
 # fetch lcov reports converter
-RUN curl -L -o /tmp/lcov_cobertura.py https://raw.githubusercontent.com/eriwen/lcov-to-cobertura-xml/8c55cd11f80a21e7e46f20f8c81fcde0bf11f5e5/lcov_cobertura/lcov_cobertura.py
+RUN set -e; \
+    curl -L -o /tmp/lcov_cobertura.py https://raw.githubusercontent.com/eriwen/lcov-to-cobertura-xml/8c55cd11f80a21e7e46f20f8c81fcde0bf11f5e5/lcov_cobertura/lcov_cobertura.py
 
-RUN add-apt-repository -y ppa:webupd8team/java; \
+RUN set -e; \
+    add-apt-repository -y ppa:webupd8team/java; \
     apt-get update; \
     echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections; \
     apt-get -y install oracle-java8-installer; \
     java -version
 
 # Build SWIG
-RUN curl -L -o /tmp/swig-3.0.12.tar.gz https://github.com/swig/swig/archive/rel-3.0.12.tar.gz; \
+RUN set -e; \
+    curl -L -o /tmp/swig-3.0.12.tar.gz https://github.com/swig/swig/archive/rel-3.0.12.tar.gz; \
     tar -C /tmp -zxf /tmp/swig-3.0.12.tar.gz; \
     cd /tmp/swig-rel-3.0.12; \
     ./autogen.sh && ./configure && make -j${PARALLELISM}; \
     make install; \
     rm -rf /tmp/swig-rel-3.0.12
 
-RUN add-apt-repository -y ppa:jonathonf/python-3.6; \
+RUN set -e; \
+    add-apt-repository -y ppa:jonathonf/python-3.6; \
     apt-get update; \
     apt-get -y install python3.6-dev
 
 # python bindings dependencies
-RUN pip install grpcio_tools; pip3 install grpcio_tools
+RUN set -e; \
+    pip install grpcio_tools; \
+    pip3 install grpcio_tools
 
 # install lcov
-RUN curl -L -o /tmp/lcov-1.13.tar.gz https://github.com/linux-test-project/lcov/releases/download/v1.13/lcov-1.13.tar.gz; cd /tmp; tar zxf lcov-1.13.tar.gz; cd lcov-1.13; make install
-
-# install NDK
-RUN curl -L -o /tmp/ndk.zip https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip; unzip /tmp/ndk.zip -d /usr/local
+RUN set -e; \
+    curl -L -o /tmp/lcov-1.13.tar.gz https://github.com/linux-test-project/lcov/releases/download/v1.13/lcov-1.13.tar.gz; cd /tmp; tar zxf lcov-1.13.tar.gz; cd lcov-1.13; make install
 
 # non-interactive adduser
 #   -m = create home dir
