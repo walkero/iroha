@@ -21,15 +21,19 @@ def doJavaBindings(buildType=Release) {
 def doPythonBindings(buildType=Release) {
   def currentPath = sh(script: "pwd", returnStdout: true).trim()
   def commit = env.GIT_COMMIT
+  def supportPython2 = "OFF"
   def artifactsPath = sprintf('%1$s/python-bindings-%2$s-%3$s-%4$s.zip', 
     [currentPath, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
+  // do not use preinstalled libed25519
+  sh "rm -rf /usr/local/include/ed25519*; unlink /usr/local/lib/libed25519.so; rm -f /usr/local/lib/libed25519.so.1.2.2"
+  if (env.PBVersion == "Python2") { supportPython2 = "ON" }
   sh """
     cmake \
       -H. \
       -Bbuild \
       -DCMAKE_BUILD_TYPE=$buildType \
       -DSWIG_PYTHON=ON \
-      -DSUPPORT_PYTHON2=ON
+      -DSUPPORT_PYTHON2=$supportPython2
   """
   sh "cmake --build build --target python_tests"
   sh "cd build; make -j${params.PARALLELISM} irohapy"
@@ -49,8 +53,7 @@ def doAndroidBindings(abiVersion) {
   """
   sh """
     . /entrypoint.sh; \
-    sed -i.bak "s~find_package(JNI REQUIRED)~#find_package(JNI REQUIRED)~" /iroha/shared_model/bindings/CMakeLists.txt; \
-    sed -i.bak "s~# the include path to jni.h and jni_md.h~SET(CMAKE_SWIG_FLAGS \\\${CMAKE_SWIG_FLAGS} -package \${PACKAGE})~" /iroha/shared_model/bindings/CMakeLists.txt; \
+    sed -i.bak "s~find_package(JNI REQUIRED)~SET(CMAKE_SWIG_FLAGS \\\${CMAKE_SWIG_FLAGS} -package \${PACKAGE})~" /iroha/shared_model/bindings/CMakeLists.txt; \
     # TODO: might not be needed in the future
     sed -i.bak "/target_include_directories(\\\${SWIG_MODULE_irohajava_REAL_NAME} PUBLIC/,+3d" /iroha/shared_model/bindings/CMakeLists.txt; \
     sed -i.bak "s~swig_link_libraries(irohajava~swig_link_libraries(irohajava \"/protobuf/.build/lib\${PROTOBUF_LIB_NAME}.a\" \"\${NDK_PATH}/platforms/android-$abiVersion/\${ARCH}/usr/\${LIBP}/liblog.so\"~" /iroha/shared_model/bindings/CMakeLists.txt; \

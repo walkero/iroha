@@ -22,9 +22,9 @@ def doDebugBuild(coverageEnabled=false) {
     + " --name ${env.IROHA_POSTGRES_HOST}"
     + " --network=${env.IROHA_NETWORK}")
   def iC = dPullOrBuild.dockerPullOrUpdate("${platform}-develop",
-                                           "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                           "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                           "https://raw.githubusercontent.com/hyperledger/iroha/develop/docker/develop/${platform}/Dockerfile",
+                                           "${env.GIT_RAW_BASE_URL}/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                           "${env.GIT_RAW_BASE_URL}/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                           "${env.GIT_RAW_BASE_URL}/develop/docker/develop/${platform}/Dockerfile",
                                            ['PARALLELISM': params.PARALLELISM])
   iC.inside(""
     + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"

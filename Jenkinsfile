@@ -22,6 +22,7 @@ properties([parameters([
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
   booleanParam(defaultValue: false, description: 'Whether build Python bindings', name: 'PythonBindings'),
   choice(choices: 'Release\nDebug', description: 'Python Bindings Build Type', name: 'PBBuildType'),
+  choice(choices: 'Python3\nPython2', description: 'Python Bindings Version', name: 'PBVersion'),
   booleanParam(defaultValue: false, description: 'Whether build Android bindings', name: 'AndroidBindings'),
   choice(choices: '26\n25\n24\n23\n22\n21\n20\n19\n18\n17\n16\n15\n14', description: 'Android Bindings ABI Version', name: 'ABABIVersion'),
   choice(choices: 'Release\nDebug', description: 'Android Bindings Build Type', name: 'ABBuildType'),
@@ -39,6 +40,7 @@ pipeline {
     DOCKERHUB = credentials('DOCKERHUB')
     DOCKER_BASE_IMAGE_DEVELOP = 'hyperledger/iroha:develop'
     DOCKER_BASE_IMAGE_RELEASE = 'hyperledger/iroha:latest'
+    GIT_RAW_BASE_URL = "https://raw.githubusercontent.com/hyperledger/iroha"
 
     IROHA_NETWORK = "iroha-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
     IROHA_POSTGRES_HOST = "pg-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
@@ -406,9 +408,9 @@ pipeline {
           def platform = sh(script: 'uname -m', returnStdout: true).trim()
           if (params.JavaBindings) {
             iC = dPullOrBuild.dockerPullOrUpdate("$platform-develop",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/develop/docker/develop/x86_64/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/develop/docker/develop/x86_64/Dockerfile",
                                                  ['PARALLELISM': params.PARALLELISM])
             iC.inside("-v /tmp/${env.GIT_COMMIT}/bindings-artifact:/tmp/bindings-artifact") {
               bindings.doJavaBindings(params.JBBuildType)
@@ -416,9 +418,9 @@ pipeline {
           }
           if (params.PythonBindings) {
             iC = dPullOrBuild.dockerPullOrUpdate("$platform-develop",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/develop/docker/develop/x86_64/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_PREVIOUS_COMMIT}/docker/develop/${platform}/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/develop/docker/develop/x86_64/Dockerfile",
                                                  ['PARALLELISM': params.PARALLELISM])
             iC.inside("-v /tmp/${env.GIT_COMMIT}/bindings-artifact:/tmp/bindings-artifact") {
               bindings.doPythonBindings(params.PBBuildType)
@@ -426,11 +428,11 @@ pipeline {
           }
           if (params.AndroidBindings) {
             iC = dPullOrBuild.dockerPullOrUpdate("android-${params.ABPlatform}-${params.ABBuildType}",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/android/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_PREVIOUS_COMMIT}/docker/android/Dockerfile",
-                                                 "https://raw.githubusercontent.com/hyperledger/iroha/develop/docker/android/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_COMMIT}/docker/android/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/${env.GIT_PREVIOUS_COMMIT}/docker/android/Dockerfile",
+                                                 "${env.GIT_RAW_BASE_URL}/develop/docker/android/Dockerfile",
                                                  ['PARALLELISM': params.PARALLELISM, 'PLATFORM': params.ABPlatform, 'BUILD_TYPE': params.ABBuildType])
-            sh "curl -L -o /tmp/${env.GIT_COMMIT}/entrypoint.sh https://raw.githubusercontent.com/hyperledger/iroha/${env.GIT_COMMIT}/docker/android/entrypoint.sh"
+            sh "curl -L -o /tmp/${env.GIT_COMMIT}/entrypoint.sh ${env.GIT_RAW_BASE_URL}/${env.GIT_COMMIT}/docker/android/entrypoint.sh"
             sh "chmod +x /tmp/${env.GIT_COMMIT}/entrypoint.sh"
             iC.inside("-v /tmp/${env.GIT_COMMIT}/entrypoint.sh:/entrypoint.sh:ro -v /tmp/${env.GIT_COMMIT}/bindings-artifact:/tmp/bindings-artifact") {
               bindings.doAndroidBindings(params.ABABIVersion)

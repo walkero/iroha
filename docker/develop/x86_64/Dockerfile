@@ -23,18 +23,20 @@ RUN set -e; \
         automake libtool \
         # dev dependencies
         libssl-dev zlib1g-dev libcurl4-openssl-dev libc6-dbg golang \
-        # CircleCI dependencies
-        git ssh tar gzip ca-certificates python3 python3-pip python3-setuptools \
+        # CI dependencies
+        git ssh tar gzip ca-certificates \
+        # Pythons
+        python3-pip python3-setuptools python-dev \
         # SWIG dependencies
-        libpcre3-dev autoconf bison python3-dev python-dev \
+        libpcre3-dev autoconf bison  \
         # other
-        wget curl file unzip gdb iputils-ping vim ccache \
-        gcovr cppcheck doxygen graphviz graphviz-dev zip; \
+        wget curl file gdb ccache \
+        gcovr cppcheck doxygen graphviz graphviz-dev unzip zip; \
     apt-get -y clean
 
-# install cmake 3.8.2
+# install cmake 3.10.2
 RUN git clone https://gitlab.kitware.com/cmake/cmake.git /tmp/cmake; \
-    (cd /tmp/cmake ; git checkout 0d5a2252ef8a586f4fc70a66aabd17fb3fd52110); \
+    (cd /tmp/cmake ; git checkout c1e087a9d3af74299d7681c9f9de59e5977a1539); \
     (cd /tmp/cmake ; /tmp/cmake/bootstrap --system-curl --parallel=${PARALLELISM} --enable-ccache); \
     make -j${PARALLELISM} -C /tmp/cmake; \
     make -C /tmp/cmake install; \
@@ -210,15 +212,6 @@ RUN set -e; \
     ldconfig; \
     rm -rf /tmp/tbb
 
-# install docker
-ENV DOCKER_VERSION=17.06.0-ce
-RUN set -e; \
-    curl -L -o /tmp/docker-${DOCKER_VERSION}.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz; \
-    tar -xz -C /tmp -f /tmp/docker-${DOCKER_VERSION}.tgz; \
-    mv /tmp/docker/* /usr/bin; \
-    rm /tmp/docker-${DOCKER_VERSION}.tgz; \
-    rm -rf /tmp/docker
-
 # install sonar cli
 ENV SONAR_CLI_VERSION=3.0.3.778
 RUN set -e; \
@@ -262,6 +255,9 @@ RUN curl -L -o /tmp/swig-3.0.12.tar.gz https://github.com/swig/swig/archive/rel-
 RUN add-apt-repository -y ppa:jonathonf/python-3.6; \
     apt-get update; \
     apt-get -y install python3.6-dev
+
+# python bindings dependencies
+RUN pip install grpcio_tools; pip3 install grpcio_tools
 
 # install lcov
 RUN curl -L -o /tmp/lcov-1.13.tar.gz https://github.com/linux-test-project/lcov/releases/download/v1.13/lcov-1.13.tar.gz; cd /tmp; tar zxf lcov-1.13.tar.gz; cd lcov-1.13; make install
