@@ -22,8 +22,8 @@ def doPythonBindings(buildType=Release) {
   def currentPath = sh(script: "pwd", returnStdout: true).trim()
   def commit = env.GIT_COMMIT
   def supportPython2 = "OFF"
-  def artifactsPath = sprintf('%1$s/python-bindings-%2$s-%3$s-%4$s.zip', 
-    [currentPath, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
+  def artifactsPath = sprintf('%1$s/python-bindings-%2$s-%3$s-%4$s-%5$s.zip', 
+    [currentPath, env.PBVersion, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
   // do not use preinstalled libed25519
   sh "rm -rf /usr/local/include/ed25519*; unlink /usr/local/lib/libed25519.so; rm -f /usr/local/lib/libed25519.so.1.2.2"
   if (env.PBVersion == "python2") { supportPython2 = "ON" }
