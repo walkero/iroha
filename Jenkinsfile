@@ -49,11 +49,6 @@ pipeline {
     IROHA_POSTGRES_PORT = 5432
   }
 
-  triggers {
-        parameterizedCron('''
-          */2 * * * * %BUILD_TYPE=Release; Linux=True; MacOS=True; ARMv7=False; ARMv8=True; Nightly=True; Doxygen=False; JavaBindings=False; PythonBindings=False; BindingsOnly=False; PARALLELISM=4
-        ''')
-    }
   options {
     buildDiscarder(logRotator(numToKeepStr: '20'))
   }
