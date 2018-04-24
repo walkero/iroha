@@ -26,7 +26,7 @@ def doPythonBindings(buildType=Release) {
     [currentPath, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
   // do not use preinstalled libed25519
   sh "rm -rf /usr/local/include/ed25519*; unlink /usr/local/lib/libed25519.so; rm -f /usr/local/lib/libed25519.so.1.2.2"
-  if (env.PBVersion == "Python2") { supportPython2 = "ON" }
+  if (env.PBVersion == "python2") { supportPython2 = "ON" }
   sh """
     cmake \
       -H. \
@@ -37,6 +37,8 @@ def doPythonBindings(buildType=Release) {
   """
   sh "cmake --build build --target python_tests"
   sh "cd build; make -j${params.PARALLELISM} irohapy"
+  sh "protoc --proto_path=schema --python_out=build/shared_model/bindings block.proto primitive.proto commands.proto queries.proto responses.proto endpoint.proto"
+  sh "${env.PBVersion} -m grpc_tools.protoc --proto_path=schema --python_out=build/shared_model/bindings --grpc_python_out=build/shared_model/bindings endpoint.proto yac.proto ordering.proto loader.proto"
   sh "zip -j $artifactsPath build/shared_model/bindings/*.py build/shared_model/bindings/*.so"
   sh "cp $artifactsPath /tmp/bindings-artifact"
   return artifactsPath
