@@ -92,10 +92,6 @@ class OrderingGateServiceTest : public ::testing::Test {
       size_t times) {
     auto wrapper = make_test_subscriber<CallExact>(gate->on_proposal(), times);
     wrapper.subscribe();
-    gate->on_proposal().subscribe([this](auto) {
-      counter--;
-      cv.notify_one();
-    });
     gate->on_proposal().subscribe([this](auto proposal) {
       proposals.push_back(proposal);
 
@@ -106,6 +102,10 @@ class OrderingGateServiceTest : public ::testing::Test {
               TestBlockBuilder().build());
       commit_subject_.get_subscriber().on_next(
           rxcpp::observable<>::just(block));
+    });
+    gate->on_proposal().subscribe([this](auto) {
+      counter--;
+      cv.notify_one();
     });
     return wrapper;
   }
