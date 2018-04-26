@@ -24,13 +24,12 @@
 
 /**
  * Sums up two amounts.
- * Requires to have the same scale.
- * Otherwise nullopt is returned
+ * Result is returned
  * @param a left term
  * @param b right term
  */
-iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
-                        std::shared_ptr<std::string>>
+iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                        std::string>
 operator+(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
   auto max_precision = std::max(a.precision(), b.precision());
@@ -49,13 +48,12 @@ operator+(const shared_model::interface::Amount &a,
 
 /**
  * Subtracts two amounts.
- * Requires to have the same scale.
- * Otherwise nullopt is returned
+ * Result is returned
  * @param a left term
  * @param b right term
  */
-iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
-                        std::shared_ptr<std::string>>
+iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                        std::string>
 operator-(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
   // check if a greater than b
@@ -78,14 +76,14 @@ operator-(const shared_model::interface::Amount &a,
 
 /**
  * Make amount with bigger precision
- * Otherwise nullopt is returned
+ * Result is returned
  * @param a amount
  * @param b right term
  */
-iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
-                        std::shared_ptr<std::string>>
-makePrecision(const shared_model::interface::Amount &amount,
-          const int new_precision) {
+iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                        std::string>
+makeAmountWithPrecision(const shared_model::interface::Amount &amount,
+                        const int new_precision) {
   if (amount.precision() > new_precision) {
     return iroha::expected::makeError(
         std::make_shared<std::string>("new precision is smaller than current"));

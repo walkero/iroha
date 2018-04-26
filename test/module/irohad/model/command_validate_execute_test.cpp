@@ -1409,6 +1409,11 @@ TEST_F(TransferAssetTest, InvalidWhenNoAssetDuringValidation) {
   ASSERT_NO_THROW(checkErrorCase(validateAndExecute()));
 }
 
+/**
+ * @given TransferAsset
+ * @when command tries to transfer amount with wrong precision
+ * @then execute fails and returns false
+ */
 TEST_F(TransferAssetTest, InvalidWhenWrongPrecision) {
   // Amount has wrong precision
   EXPECT_CALL(*wsv_query, getAccountRoles(transfer_asset->dest_account_id))

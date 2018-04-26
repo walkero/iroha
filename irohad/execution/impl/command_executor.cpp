@@ -66,14 +66,14 @@ namespace iroha {
     auto precision = asset.value()->precision();
     if (command->amount().precision() > precision) {
       return makeExecutionError(
-          (boost::format("command pecision is greater than asset precision: "
+          (boost::format("command precision is greater than asset precision: "
                          "expected %d, but got %d")
            % precision % command->amount().precision())
               .str(),
           command_name);
     }
     auto command_amount =
-        makePrecision(command->amount(), asset.value()->precision());
+        makeAmountWithPrecision(command->amount(), asset.value()->precision());
     if (not queries->getAccount(command->accountId())) {
       return makeExecutionError(
           (boost::format("account %s is absent") % command->accountId()).str(),
@@ -360,14 +360,14 @@ namespace iroha {
     auto precision = asset.value()->precision();
     if (command->amount().precision() > precision) {
       return makeExecutionError(
-          (boost::format("command pecision is greater than asset precision: "
+          (boost::format("command precision is greater than asset precision: "
                          "expected %d, but got %d")
            % precision % command->amount().precision())
               .str(),
           command_name);
     }
     auto command_amount =
-        makePrecision(command->amount(), asset.value()->precision());
+        makeAmountWithPrecision(command->amount(), asset.value()->precision());
     auto account_asset =
         queries->getAccountAsset(command->accountId(), command->assetId());
     if (not account_asset) {
@@ -428,14 +428,14 @@ namespace iroha {
     auto precision = asset.value()->precision();
     if (command->amount().precision() > precision) {
       return makeExecutionError(
-          (boost::format("command pecision is greater than asset precision: "
+          (boost::format("command precision is greater than asset precision: "
                          "expected %d, but got %d")
            % precision % command->amount().precision())
               .str(),
           command_name);
     }
     auto command_amount =
-        makePrecision(command->amount(), asset.value()->precision());
+        makeAmountWithPrecision(command->amount(), asset.value()->precision());
     // Set new balance for source account
     auto src_account_asset_new = command_amount |
         [&src_account_asset](const auto &amount) {

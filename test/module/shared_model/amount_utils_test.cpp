@@ -21,6 +21,11 @@
 
 class AmountTest : public testing::Test {};
 
+/**
+ * @given two amounts
+ * @when tries to sum it up
+ * @then correct amount is given
+ */
 TEST_F(AmountTest, PlusTest) {
   iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                           std::shared_ptr<std::string>>
@@ -54,6 +59,11 @@ TEST_F(AmountTest, PlusTest) {
       });
 }
 
+/**
+ * @given two amounts
+ * @when tries to subtract it up
+ * @then correct amount is given
+ */
 TEST_F(AmountTest, MinusTest) {
   iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                           std::shared_ptr<std::string>>
@@ -87,6 +97,11 @@ TEST_F(AmountTest, MinusTest) {
       });
 }
 
+/**
+ * @given an amount
+ * @when tries change its precision
+ * @then correct amount is given
+ */
 TEST_F(AmountTest, PrecisionTest) {
   iroha::expected::Result<std::shared_ptr<shared_model::interface::Amount>,
                           std::shared_ptr<std::string>>
@@ -95,7 +110,7 @@ TEST_F(AmountTest, PrecisionTest) {
   a.match(
       [](const iroha::expected::Value<
           std::shared_ptr<shared_model::interface::Amount>> &a_value) {
-        auto c = makePrecision(*a_value.value, 4);
+        auto c = makeAmountWithPrecision(*a_value.value, 4);
         c.match(
             [](const iroha::expected::Value<
                 std::shared_ptr<shared_model::interface::Amount>> &c_value) {
@@ -111,6 +126,11 @@ TEST_F(AmountTest, PrecisionTest) {
       });
 }
 
+/**
+ * @given two amounts which sum overflows amount type
+ * @when tries to sum it up
+ * @then an error occurs
+ */
 TEST_F(AmountTest, PlusOverflowsTest) {
   const std::string &uint256_halfmax =
       "723700557733226221397318656304299424082937404160253525246609900049457060"
