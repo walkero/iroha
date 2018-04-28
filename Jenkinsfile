@@ -37,6 +37,9 @@ pipeline {
     SORABOT_TOKEN = credentials('SORABOT_TOKEN')
     SONAR_TOKEN = credentials('SONAR_TOKEN')
     GIT_RAW_BASE_URL = "https://raw.githubusercontent.com/hyperledger/iroha"
+    DOCKER_BASE_IMAGE_DEVELOP = 'hyperledger/iroha:develop'
+    DOCKER_BASE_IMAGE_RELEASE = 'hyperledger/iroha:latest'
+    JENKINS_DOCKER_IMAGE_DIR = '/tmp/docker'
 
     IROHA_NETWORK = "iroha-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
     IROHA_POSTGRES_HOST = "pg-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
@@ -408,11 +411,12 @@ pipeline {
   }
   post {
      // TODO: send email-notifications
-     always {
-       emailext( subject: '$DEFAULT_SUBJECT', 
-                 body: '$DEFAULT_CONTENT',
-                 to: 'tyukushin@soramitsu.co.jp'
-       )
-     }
+    always {
+      //if (env.CHANGE_ID == null)
+      emailext( subject: '$DEFAULT_SUBJECT', 
+                body: '$DEFAULT_CONTENT',
+                to: 'tyukushin@soramitsu.co.jp'
+      )
+    }
   }
 }
