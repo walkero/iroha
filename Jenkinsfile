@@ -36,10 +36,7 @@ pipeline {
     CCACHE_RELEASE_DIR = '/opt/.ccache-release'
     SORABOT_TOKEN = credentials('SORABOT_TOKEN')
     SONAR_TOKEN = credentials('SONAR_TOKEN')
-    DOCKERHUB = credentials('DOCKERHUB')
-    DOCKER_BASE_IMAGE_DEVELOP = 'hyperledger/iroha:develop'
-    DOCKER_BASE_IMAGE_RELEASE = 'hyperledger/iroha:latest'
-    JENKINS_DOCKER_IMAGE_DIR = '/tmp/docker'
+    GIT_RAW_BASE_URL = "https://raw.githubusercontent.com/hyperledger/iroha"
 
     IROHA_NETWORK = "iroha-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
     IROHA_POSTGRES_HOST = "pg-0${CHANGE_ID}-${GIT_COMMIT}-${BUILD_NUMBER}"
