@@ -413,7 +413,10 @@ pipeline {
   post {
      // TODO: send email-notifications
      always {
-       emailext(to: "tyukushin@soramitsu.co.jp")
+       emailext( subject: '$DEFAULT_SUBJECT', 
+                 body: '$DEFAULT_CONTENT',
+                 to: 'tyukushin@soramitsu.co.jp'
+       )
      }
   }
 }
