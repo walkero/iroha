@@ -79,10 +79,10 @@ def doPreCoverageStep() {
 }
 
 // TODO: add tests list argument to pass to this function
-// now there are only unit tests running      
+// TODO: cmake changes required
+
 def doTestStep() {
   sh "docker network create ${env.IROHA_NETWORK}"
-  sh "pwd; ls"
   docker.image('postgres:9.5').run(""
     + " -e POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
     + " -e POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
@@ -116,19 +116,15 @@ def doPostCoverageCoberturaStep() {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}"
   }
   def iC = docker.image("${dockerAgentDockerImage}")
-  // iC.inside(""
-  //   // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-  //   // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-  //   // + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   // + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  iC.inside(""
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-  //       sh "cmake --build build --target coverage.info"
-  //       sh "python /tmp/lcov_cobertura.py build/reports/coverage.info -o build/reports/coverage.xml"
-  //       cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/build/reports/coverage.xml', conditionalCoverageTargets: '75, 50, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '75, 50, 0', maxNumberOfBuilds: 50, methodCoverageTargets: '75, 50, 0', onlyStable: false, zoomCoverageChart: false
-  //   }
-  //   // TODO: if we need to do copy built binaries to the volume each time
-  //   sh "cp ./build/bin/* /tmp/${GIT_COMMIT}/"
+        sh "cmake --build build --target coverage.info"
+        sh "python /tmp/lcov_cobertura.py build/reports/coverage.info -o build/reports/coverage.xml"
+        cobertura autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: '**/build/reports/coverage.xml', conditionalCoverageTargets: '75, 50, 0', failUnhealthy: false, failUnstable: false, lineCoverageTargets: '75, 50, 0', maxNumberOfBuilds: 50, methodCoverageTargets: '75, 50, 0', onlyStable: false, zoomCoverageChart: false
+    }
+    // TODO: if we need to do copy built binaries to the volume each time
+    sh "cp ./build/bin/* /tmp/${GIT_COMMIT}/"
 }
 
 
@@ -137,27 +133,23 @@ def doPostCoverageSonarStep() {
     sh "docker load -i ${env.JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile}"
   }
   def iC = docker.image("${dockerAgentDockerImage}")
-  // iC.inside(""
-  //   // + " -e IROHA_POSTGRES_HOST=${env.IROHA_POSTGRES_HOST}"
-  //   // + " -e IROHA_POSTGRES_PORT=${env.IROHA_POSTGRES_PORT}"
-  //   // + " -e IROHA_POSTGRES_USER=${env.IROHA_POSTGRES_USER}"
-  //   // + " -e IROHA_POSTGRES_PASSWORD=${env.IROHA_POSTGRES_PASSWORD}"
-  //   + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
+  iC.inside(""
+    + " -v ${CCACHE_DIR}:${CCACHE_DIR}") {
 
-  //     sh "cmake --build build --target cppcheck"
-  //     // Sonar
-  //     if (env.CHANGE_ID != null) {
-  //       sh """
-  //         sonar-scanner \
-  //           -Dsonar.github.disableInlineComments \
-  //           -Dsonar.github.repository='hyperledger/iroha' \
-  //           -Dsonar.analysis.mode=preview \
-  //           -Dsonar.login=${SONAR_TOKEN} \
-  //           -Dsonar.projectVersion=${BUILD_TAG} \
-  //           -Dsonar.github.oauth=${SORABOT_TOKEN} \
-  //           -Dsonar.github.pullRequest=${CHANGE_ID}
-  //       """
-  //     }
-  // }
+      sh "cmake --build build --target cppcheck"
+      // Sonar
+      if (env.CHANGE_ID != null) {
+        sh """
+          sonar-scanner \
+            -Dsonar.github.disableInlineComments \
+            -Dsonar.github.repository='hyperledger/iroha' \
+            -Dsonar.analysis.mode=preview \
+            -Dsonar.login=${SONAR_TOKEN} \
+            -Dsonar.projectVersion=${BUILD_TAG} \
+            -Dsonar.github.oauth=${SORABOT_TOKEN} \
+            -Dsonar.github.pullRequest=${CHANGE_ID}
+        """
+      }
+  }
 }
 return this

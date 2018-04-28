@@ -63,25 +63,8 @@ pipeline {
       agent { label 'master' }
       steps {
         script {
-          if (BRANCH_NAME != "develop") {
-            if (params.Nightly) {
-                // Stop this job running if it is nightly but not the develop it should be
-                // def tmp = load ".jenkinsci/cancel-nightly-except-develop.groovy"
-                // tmp.cancelThisJob()
-            }
-            else {
-              // Stop same job running builds if it is commit/PR build and not triggered as nightly
-              def builds = load ".jenkinsci/cancel-builds-same-job.groovy"
-              builds.cancelSameJobBuilds()
-            }
-          }
-          else {
-            if (!params.Nightly) {
-              // Stop same job running builds if it is develop but it is not nightly
-              def builds = load ".jenkinsci/cancel-builds-same-job.groovy"
-              builds.cancelSameJobBuilds()
-            }
-          }
+           def builds = load ".jenkinsci/cancel-builds-same-job.groovy"
+           builds.cancelSameJobBuilds()
         }
       }
     }
@@ -224,11 +207,15 @@ pipeline {
     }
     stage('Pre-Coverage') {
       when {
-        allOf {
-          expression { return ! params.BindingsOnly }
-          expression { params.BUILD_TYPE == 'Debug' }
-          expression { BRANCH_NAME ==~ /(master|develop)/ }
-        }
+        anyOf {
+          expression { params.Coverage }  // by request
+          expression { env.CHANGE_ID != null && GIT_COMMIT == GIT_PREVIOUS_COMMIT } // on the open PR
+          allOf {
+            expression { return ! params.BindingsOnly }
+            expression { params.BUILD_TYPE == 'Debug' }
+            expression { BRANCH_NAME == "master" }
+          }
+        } 
       }
       steps {
         script {
@@ -308,11 +295,15 @@ pipeline {
     }
     stage('Post-Coverage') {
       when {
-        allOf {
-          expression { return ! params.BindingsOnly }
-          expression { params.BUILD_TYPE == 'Debug' }
-          expression { BRANCH_NAME ==~ /(master|develop)/ }
-        }
+        anyOf {
+          expression { params.Coverage }  // by request
+          expression { env.CHANGE_ID != null && GIT_COMMIT == GIT_PREVIOUS_COMMIT } // on the open PR
+          allOf {
+            expression { return ! params.BindingsOnly }
+            expression { params.BUILD_TYPE == 'Debug' }
+            expression { BRANCH_NAME == "master" }
+          }
+        } 
       }
       parallel {
         stage('lcov_cobertura') {
@@ -418,5 +409,11 @@ pipeline {
         }
       }
     }
+  }
+  post {
+     // TODO: send email-notifications
+     always {
+       emailext(to: "tyukushin@soramitsu.co.jp")
+     }
   }
 }
