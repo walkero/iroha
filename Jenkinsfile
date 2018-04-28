@@ -212,7 +212,7 @@ pipeline {
           allOf {
             expression { return ! params.BindingsOnly }
             expression { params.BUILD_TYPE == 'Debug' }
-            expression { BRANCH_NAME == "master" }
+            expression { BRANCH_NAME == "master" }          // on merge commit to master
           }
         } 
       }
