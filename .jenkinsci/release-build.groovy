@@ -12,6 +12,9 @@ def doReleaseBuild() {
   if ("arm7" in env.NODE_NAME) {
     parallelism = 1
   }
+  if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+    parallelism = 8
+  }
   def platform = sh(script: 'uname -m', returnStdout: true).trim()
   sh "mkdir /tmp/${env.GIT_COMMIT}-${BUILD_NUMBER} || true"
   iC = docker.image("hyperledger/iroha:${platform}-develop-build")

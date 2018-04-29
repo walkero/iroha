@@ -35,6 +35,9 @@ def dockerPullOrUpdate(imageName, currentDockerfileURL, previousDockerfileURL, r
     // first commit in this branch or Dockerfile modified
     if (remoteFilesDiffer(currentDockerfileURL, referenceDockerfileURL)) {
       // if we're lucky to build on the same agent, image will be built using cache
+      if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+        sh "docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} || true"
+      }
       iC = docker.build("hyperledger/iroha:${commit}-${BUILD_NUMBER}", "$buildOptions -f /tmp/${env.GIT_COMMIT}/f1 /tmp/${env.GIT_COMMIT}")
     }
     else {
@@ -42,10 +45,16 @@ def dockerPullOrUpdate(imageName, currentDockerfileURL, previousDockerfileURL, r
       def testExitCode = sh(script: "docker pull hyperledger/iroha:${imageName}", returnStatus: true)
       if (testExitCode != 0) {
         // image does not (yet) exist on Dockerhub. Build it
+        if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+          sh "docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} || true"
+        }
         iC = docker.build("hyperledger/iroha:${commit}-${BUILD_NUMBER}", "$buildOptions --no-cache -f /tmp/${env.GIT_COMMIT}/f1 /tmp/${env.GIT_COMMIT}")   
       }
       else {
         // no difference found compared to both previous and reference Dockerfile
+        if ( env.NODE_NAME ==~ /^x86_64.+/ ) {
+          sh "docker load -i ${JENKINS_DOCKER_IMAGE_DIR}/${dockerImageFile} || true"
+        }
         iC = docker.image("hyperledger/iroha:${imageName}")
       }
     }
