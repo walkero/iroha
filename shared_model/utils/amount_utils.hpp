@@ -22,6 +22,10 @@
 #include "builders/protobuf/common_objects/proto_amount_builder.hpp"
 #include "common/result.hpp"
 
+int pow(int degree, int number) {
+  return static_cast<int>(std::pow(degree, number));
+}
+
 /**
  * Sums up two amounts.
  * Result is returned
@@ -33,8 +37,8 @@ iroha::expected::PolymorphicResult<shared_model::interface::Amount,
 operator+(const shared_model::interface::Amount &a,
           const shared_model::interface::Amount &b) {
   auto max_precision = std::max(a.precision(), b.precision());
-  auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
-  auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
+  auto val_a = a.intValue() * pow(10, max_precision - a.precision());
+  auto val_b = b.intValue() * pow(10, max_precision - b.precision());
   if (val_a < a.intValue() || val_b < b.intValue() || val_a + val_b < val_a
       || val_a + val_b < val_b) {
     return iroha::expected::makeError(
@@ -62,8 +66,8 @@ operator-(const shared_model::interface::Amount &a,
         std::make_shared<std::string>("minuend is smaller than subtrahend"));
   }
   auto max_precision = std::max(a.precision(), b.precision());
-  auto val_a = a.intValue() * (int)std::pow(10, max_precision - a.precision());
-  auto val_b = b.intValue() * (int)std::pow(10, max_precision - b.precision());
+  auto val_a = a.intValue() * pow(10, max_precision - a.precision());
+  auto val_b = b.intValue() * pow(10, max_precision - b.precision());
   if (val_a < a.intValue() || val_b < b.intValue()) {
     return iroha::expected::makeError(
         std::make_shared<std::string>("new precision overflows number"));
@@ -88,7 +92,7 @@ makeAmountWithPrecision(const shared_model::interface::Amount &amount,
     return iroha::expected::makeError(
         std::make_shared<std::string>("new precision is smaller than current"));
   }
-  auto val_amount = amount.intValue() * (int)std::pow(10, new_precision - amount.precision());
+  auto val_amount = amount.intValue() * pow(10, new_precision - amount.precision());
   if (val_amount < amount.intValue()) {
     return iroha::expected::makeError(
         std::make_shared<std::string>("operation overflows number"));
@@ -109,8 +113,8 @@ int compareAmount(const shared_model::interface::Amount &a,
   }
   // when different precisions transform to have the same scale
   auto max_precision = std::max(a.precision(), b.precision());
-  auto val1 = a.intValue() * (int)std::pow(10, max_precision - a.precision());
-  auto val2 = b.intValue() * (int)std::pow(10, max_precision - b.precision());
+  auto val1 = a.intValue() * pow(10, max_precision - a.precision());
+  auto val2 = b.intValue() * pow(10, max_precision - b.precision());
   return (val1 < val2) ? -1 : (val1 > val2) ? 1 : 0;
 }
 
