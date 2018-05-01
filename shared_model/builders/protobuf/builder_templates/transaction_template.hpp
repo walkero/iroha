@@ -63,7 +63,7 @@ namespace shared_model {
       using ProtoTx = iroha::protocol::Transaction;
       using ProtoCommand = iroha::protocol::Command;
 
-      template <int Sp>
+       template <int Sp>
       TemplateTransactionBuilder(
           const TemplateTransactionBuilder<Sp, SV, BT> &o)
           : transaction_(o.transaction_),
