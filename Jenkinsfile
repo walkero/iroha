@@ -7,13 +7,8 @@ pipeline {
     stage ('checkout') {
       steps {
         script {
-          checkout([$class: 'GitSCM', branches: [[name: '*/ready/**']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout'], pretestedIntegration(gitIntegrationStrategy: squash(), integrationBranch: 'ci-integration-develop', repoName: 'origin')], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'sorabot-github-user', url: 'https://github.com/hyperledger/iroha.git']]])
+          checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/ci-integration-test']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', mergeStrategy: <object of type org.jenkinsci.plugins.gitclient.MergeCommand.Strategy>, mergeTarget: 'ci-integration-develop']]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'sorabot-github-user', url: 'https://github.com/hyperledger/iroha.git']]]
         }
-      }
-    }
-    stage('publish') {
-      steps {
-        pretestedIntegrationPublisher()
       }
     }
   }
