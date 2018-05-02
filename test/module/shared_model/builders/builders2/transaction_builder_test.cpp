@@ -27,7 +27,17 @@ class DefaultPolicy {
   }
 };
 
-TEST(ProtoBuilderTest, TestTransactionBuilder) {
+template <typename T>
+class ExceptionPolicy {
+ public:
+  std::unique_ptr<shared_model::interface::Transaction> operator()(
+      T &&transaction) const {
+    throw 1;
+    return std::make_unique<T>(transaction.getTransport());
+  }
+};
+
+TEST(GenericBuilderTest, TestTransactionBuilder) {
   TransactionBuilder<ProtoTransactionBuilder,
                      DefaultPolicy<shared_model::proto::Transaction>>
       builder;
@@ -37,4 +47,30 @@ TEST(ProtoBuilderTest, TestTransactionBuilder) {
 
   EXPECT_EQ(transaction->creatorAccountId(), "Peter");
   EXPECT_EQ(transaction->createdTime(), 1337);
+}
+
+TEST(GenericBuilderTest, TestTransactionExceptionPolicy) {
+  TransactionBuilder<ProtoTransactionBuilder,
+                     ExceptionPolicy<shared_model::proto::Transaction>>
+      builder;
+
+  auto builder2 = builder.creatorAccountId("Peter").createdTime(1337);
+
+  ASSERT_ANY_THROW(builder2.build());
+}
+
+TEST(GenericBuilderTest, TestCopyOfState) {
+  TransactionBuilder<ProtoTransactionBuilder,
+                     DefaultPolicy<shared_model::proto::Transaction>>
+      builder;
+
+  auto builder1 = builder.createdTime(1337);
+  auto builder2(builder1);
+
+  auto t1 = builder1.creatorAccountId("John").build();
+  auto t2 = builder2.creatorAccountId("Stan").build();
+
+  EXPECT_EQ(t1->createdTime(), t2->createdTime());
+  EXPECT_EQ(t1->creatorAccountId(), "John");
+  EXPECT_EQ(t2->creatorAccountId(), "Stan");
 }

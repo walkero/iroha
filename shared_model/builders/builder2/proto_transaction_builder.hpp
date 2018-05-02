@@ -15,16 +15,24 @@ class ProtoTransactionBuilder {
   }
 
   auto creatorAccountId(const shared_model::interface::types::AccountIdType& id) {
-    ProtoTransactionBuilder b = *this;
+    ProtoTransactionBuilder b = std::move(*this);
     b.transaction_.mutable_payload()->set_creator_account_id(id);
     return b;
   }
 
   auto createdTime(shared_model::interface::types::TimestampType created_time) {
-    ProtoTransactionBuilder b = *this;
+    ProtoTransactionBuilder b = std::move(*this);
     b.transaction_.mutable_payload()->set_created_time(created_time);
     return b;
   }
+
+//  ProtoTransactionBuilder() = default;
+//
+//  ProtoTransactionBuilder(const ProtoTransactionBuilder &) = delete;
+//  ProtoTransactionBuilder &operator=(const ProtoTransactionBuilder &) = delete;
+//
+//  ProtoTransactionBuilder(ProtoTransactionBuilder &&) = default;
+//  ProtoTransactionBuilder &operator=(ProtoTransactionBuilder &&) = default;
 
  private:
   iroha::protocol::Transaction transaction_;
