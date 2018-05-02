@@ -90,6 +90,13 @@ namespace iroha {
       virtual rxcpp::observable<wBlock> getTopBlocks(uint32_t count) = 0;
 
       /**
+       * Get given number of blocks from top.
+       * @param count - number of blocks to retrieve
+       * @return observable of Model Block
+       */
+      virtual uint32_t getTopBlockHeight() = 0;
+
+      /**
        * Synchronously gets transaction by its hash
        * @param hash - hash to search
        * @return transaction or boost::none

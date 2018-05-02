@@ -226,5 +226,9 @@ namespace iroha {
       return getBlockId(hash) != boost::none;
     }
 
+    uint32_t PostgresBlockQuery::getTopBlockHeight() {
+      return block_store_.last_id();
+    }
+
   }  // namespace ametsuchi
 }  // namespace iroha
