@@ -19,8 +19,8 @@ pipeline {
       post {
         success {
           script {
-            withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot-token')]) {
-              sh("git push https://${sorabot-token}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+            withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
+              sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
             }
           }
         }
