@@ -31,11 +31,16 @@ function(addtest test_name SOURCES)
       NAME ${test_name}
       COMMAND $<TARGET_FILE:${test_name}> ${test_xml_output}
   )
-  strictmode(${test_name})
+  if (NOT MSVC)
+    # protobuf generates warnings at the moment
+    strictmode(${test_name})
+  endif ()
   if ((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
   (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
   (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
     target_compile_options(${test_name} PRIVATE -Wno-inconsistent-missing-override)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # do nothing, but also don't spam warning on each test
   else ()
     message(AUTHOR_WARNING "Unknown compiler: building target ${target} with default options")
   endif ()

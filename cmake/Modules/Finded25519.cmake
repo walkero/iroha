@@ -12,7 +12,12 @@ find_package_handle_standard_args(ed25519 DEFAULT_MSG
     )
 
 set(URL https://github.com/hyperledger/iroha-ed25519)
-set(VERSION e7188b8393dbe5ac54378610d53630bd4a180038)
+if (MSVC)
+  # trunk/1.2 with windows-specific changes
+  set(VERSION 31bb9b50e01b21ea2c21d33929e20934be4665b4)
+else()
+  set(VERSION e7188b8393dbe5ac54378610d53630bd4a180038)
+endif()
 set_target_description(ed25519 "Digital signature algorithm" ${URL} ${VERSION})
 
 if (NOT ed25519_FOUND)
