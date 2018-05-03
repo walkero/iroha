@@ -16,12 +16,12 @@ pipeline {
           [[credentialsId: 'sorabot-github-user', url: 'https://github.com/hyperledger/iroha.git']]]
         }
       }
-    }
-    post {
-      success {
-        script {
-          withCredentials([string(credentialsId: 'sorabot-github-user', variable: 'sorabot-token')]) {
-            sh("git push https://${sorabot-token}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+      post {
+        success {
+          script {
+            withCredentials([string(credentialsId: 'sorabot-github-user', variable: 'sorabot-token')]) {
+              sh("git push https://${sorabot-token}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+            }
           }
         }
       }
