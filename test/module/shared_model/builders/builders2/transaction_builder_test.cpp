@@ -4,7 +4,7 @@
 #include "builders/builder2/transaction_builder.hpp"
 
 TEST(ProtoBuilderTest, TestProtoBuilderExample) {
-  ProtoTransactionBuilder builder;
+  ProtoTransactionBuilder<> builder;
   builder = builder.createdTime(1337);
 
   auto transaction = builder.creatorAccountId("Peter").build();
@@ -38,7 +38,7 @@ class ExceptionPolicy {
 };
 
 TEST(GenericBuilderTest, TestTransactionBuilder) {
-  TransactionBuilder<ProtoTransactionBuilder,
+  TransactionBuilder<ProtoTransactionBuilder<>,
                      DefaultPolicy<shared_model::proto::Transaction>>
       builder;
 
@@ -50,7 +50,7 @@ TEST(GenericBuilderTest, TestTransactionBuilder) {
 }
 
 TEST(GenericBuilderTest, TestTransactionExceptionPolicy) {
-  TransactionBuilder<ProtoTransactionBuilder,
+  TransactionBuilder<ProtoTransactionBuilder<>,
                      ExceptionPolicy<shared_model::proto::Transaction>>
       builder;
 
@@ -60,7 +60,7 @@ TEST(GenericBuilderTest, TestTransactionExceptionPolicy) {
 }
 
 TEST(GenericBuilderTest, TestCopyOfState) {
-  TransactionBuilder<ProtoTransactionBuilder,
+  TransactionBuilder<ProtoTransactionBuilder<>,
                      DefaultPolicy<shared_model::proto::Transaction>>
       builder;
 

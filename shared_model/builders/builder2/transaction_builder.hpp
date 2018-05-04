@@ -5,18 +5,22 @@
 
 template <typename BackendBuilder,
           typename BuildPolicy,
+          SetterPolicy SetterPolicy = SetterPolicy::Copy,
           int S = 0>
 class TransactionBuilder
     : public BasicBuilder<
-          TransactionBuilder<BackendBuilder, BuildPolicy, S>,
+          TransactionBuilder<BackendBuilder, BuildPolicy, SetterPolicy, S>,
           BackendBuilder,
           BuildPolicy,
+          SetterPolicy,
           S> {
  public:
-  using Base = BasicBuilder<TransactionBuilder<BackendBuilder, BuildPolicy, S>,
-                            BackendBuilder,
-                            BuildPolicy,
-                            S>;
+  using Base = BasicBuilder<
+      TransactionBuilder<BackendBuilder, BuildPolicy, SetterPolicy, S>,
+      BackendBuilder,
+      BuildPolicy,
+      SetterPolicy,
+      S>;
 
   using Base::Base;
 
@@ -36,7 +40,9 @@ class TransactionBuilder
   }
 
   template <int s>
-  using NextBuilder =
-      TransactionBuilder<BackendBuilder, BuildPolicy, S | (1 << s)>;
+  using NextBuilder = TransactionBuilder<BackendBuilder,
+                                         BuildPolicy,
+                                         SetterPolicy,
+                                         S | (1 << s)>;
 };
 #endif  // IROHA_TRANSACTION_BUILDER_HPP
