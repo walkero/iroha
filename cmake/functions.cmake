@@ -56,10 +56,17 @@ endfunction()
 function(compile_proto_to_cpp PROTO)
   string(REGEX REPLACE "\\.proto$" ".pb.h" GEN_PB_HEADER ${PROTO})
   string(REGEX REPLACE "\\.proto$" ".pb.cc" GEN_PB ${PROTO})
+  if (MSVC)
+    set(GEN_COMMAND "${Protobuf_PROTOC_EXECUTABLE}")
+    set(GEN_ARGS ${Protobuf_INCLUDE_DIR})
+  else()
+    set(GEN_COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${protobuf_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH} "${protoc_EXECUTABLE}")
+    set(GEN_ARGS ${protobuf_INCLUDE_DIR})
+  endif()
   add_custom_command(
       OUTPUT ${IROHA_SCHEMA_DIR}/${GEN_PB_HEADER} ${IROHA_SCHEMA_DIR}/${GEN_PB}
-      COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${protobuf_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH} "${protoc_EXECUTABLE}"
-      ARGS -I${protobuf_INCLUDE_DIR} -I. --cpp_out=${IROHA_SCHEMA_DIR} ${PROTO}
+      COMMAND ${GEN_COMMAND}
+      ARGS -I${GEN_ARGS} -I. --cpp_out=${IROHA_SCHEMA_DIR} ${PROTO}
       DEPENDS protoc
       WORKING_DIRECTORY ${IROHA_SCHEMA_DIR}
       )

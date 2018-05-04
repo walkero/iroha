@@ -25,7 +25,7 @@ if (NOT ed25519_FOUND)
       GIT_REPOSITORY ${URL}
       GIT_TAG        ${VERSION}
       CMAKE_ARGS     -DTESTING=OFF -DBUILD=STATIC
-      BUILD_BYPRODUCTS ${EP_PREFIX}/src/hyperledger_ed25519-build/libed25519.a
+      BUILD_BYPRODUCTS ${EP_PREFIX}/src/hyperledger_ed25519-build/${CMAKE_STATIC_LIBRARY_PREFIX}ed25519${CMAKE_STATIC_LIBRARY_SUFFIX}
       INSTALL_COMMAND "" # remove install step
       TEST_COMMAND    "" # remove test step
       UPDATE_COMMAND  "" # remove update step
@@ -36,6 +36,13 @@ if (NOT ed25519_FOUND)
   set(ed25519_LIBRARY ${binary_dir}/${CMAKE_STATIC_LIBRARY_PREFIX}ed25519${CMAKE_STATIC_LIBRARY_SUFFIX})
   file(MAKE_DIRECTORY ${ed25519_INCLUDE_DIR})
   link_directories(${binary_dir})
+
+  if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_target_properties(ed25519 PROPERTIES
+      IMPORTED_LOCATION_DEBUG ${binary_dir}/Debug/${CMAKE_STATIC_LIBRARY_PREFIX}ed25519${CMAKE_STATIC_LIBRARY_SUFFIX}
+      IMPORTED_LOCATION_RELEASE ${binary_dir}/Release/${CMAKE_STATIC_LIBRARY_PREFIX}ed25519${CMAKE_STATIC_LIBRARY_SUFFIX}
+      )
+  endif()
 
   add_dependencies(ed25519 hyperledger_ed25519)
 endif ()
