@@ -19,8 +19,13 @@ pipeline {
       post {
         success {
           script {
-            withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
-              sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+            env.READY_TO_MERGE = input message: 'Your PR has been built successfully. Merge it now?',
+              parameters: [choice(name: 'Merge?', choices: 'no\nyes', description: 'Choose "yes" if you want 
+                to merge this PR with develop branch')]
+            if (env.READY_TO_MERGE == 'yes') {
+              withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
+                sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+              }
             }
           }
         }
