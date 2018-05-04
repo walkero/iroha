@@ -15,68 +15,30 @@
  * limitations under the License.
  */
 
-#ifndef IROHA_SHARED_MODEL_QUERY_HPP
-#define IROHA_SHARED_MODEL_QUERY_HPP
+#ifndef IROHA_SHARED_MODEL_BLOCKS_QUERY_HPP
+#define IROHA_SHARED_MODEL_BLOCKS_QUERY_HPP
 
 #include <boost/variant.hpp>
 
 #include "interfaces/base/primitive.hpp"
 #include "interfaces/base/signable.hpp"
 #include "interfaces/common_objects/types.hpp"
-#include "interfaces/queries/get_account.hpp"
-#include "interfaces/queries/get_account_asset_transactions.hpp"
-#include "interfaces/queries/get_account_assets.hpp"
-#include "interfaces/queries/get_account_detail.hpp"
-#include "interfaces/queries/get_account_transactions.hpp"
-#include "interfaces/queries/get_asset_info.hpp"
-#include "interfaces/queries/get_role_permissions.hpp"
-#include "interfaces/queries/get_roles.hpp"
-#include "interfaces/queries/get_signatories.hpp"
-#include "interfaces/queries/get_transactions.hpp"
-#include "interfaces/queries/query_payload_meta.hpp"
-#include "utils/polymorphic_wrapper.hpp"
-#include "utils/string_builder.hpp"
-#include "utils/visitor_apply_for_all.hpp"
 
 #ifndef DISABLE_BACKWARD
-#include "model/query.hpp"
+#include "model/queries/blocks_query.hpp"
 #endif
 
 namespace shared_model {
   namespace interface {
 
     /**
-     * Class Query provides container with one of concrete query available in
+     * Class BlocksQuery provides container with one of concrete query available in
      * system.
      * General note: this class is container for queries but not a base class.
      */
-    class Query : public SIGNABLE(Query) {
+    class BlocksQuery : public SIGNABLE(BlocksQuery) {
      private:
-      /// Shortcut type for polymorphic wrapper
-      template <typename... Value>
-      using wrap = boost::variant<detail::PolymorphicWrapper<Value>...>;
-
      public:
-      /// Type of variant, that handle concrete query
-      using QueryVariantType = wrap<GetAccount,
-                                    GetSignatories,
-                                    GetAccountTransactions,
-                                    GetAccountAssetTransactions,
-                                    GetTransactions,
-                                    GetAccountAssets,
-                                    GetAccountDetail,
-                                    GetRoles,
-                                    GetRolePermissions,
-                                    GetAssetInfo>;
-
-      /// Types of concrete commands, in attached variant
-      using QueryListType = QueryVariantType::types;
-
-      /**
-       * @return reference to const variant with concrete command
-       */
-      virtual const QueryVariantType &get() const = 0;
-
       /**
        * @return id of query creator
        */
@@ -93,18 +55,16 @@ namespace shared_model {
 
       std::string toString() const override {
         return detail::PrettyStringBuilder()
-            .init("Query")
+            .init("BlocksQuery")
             .append("creatorId", creatorAccountId())
             .append("queryCounter", std::to_string(queryCounter()))
             .append(Signable::toString())
-            .append(boost::apply_visitor(detail::ToStringVisitor(), get()))
             .finalize();
       }
 
 #ifndef DISABLE_BACKWARD
       OldModelType *makeOldModel() const override {
-        auto old_model = boost::apply_visitor(
-            detail::OldModelCreatorVisitor<OldModelType *>(), get());
+        auto old_model = new OldModelType();
         old_model->creator_account_id = creatorAccountId();
         old_model->query_counter = queryCounter();
         // signature related
@@ -124,9 +84,12 @@ namespace shared_model {
 #endif
 
       bool operator==(const ModelType &rhs) const override {
-        return this->get() == rhs.get();
+        return creatorAccountId() == rhs.creatorAccountId()
+            && queryCounter() == rhs.queryCounter()
+            && createdTime() == rhs.createdTime()
+            && signatures() == rhs.signatures();
       }
     };
   }  // namespace interface
 }  // namespace shared_model
-#endif  // IROHA_SHARED_MODEL_QUERY_HPP
+#endif  // IROHA_SHARED_MODEL_BLOCKS_QUERY_HPP
