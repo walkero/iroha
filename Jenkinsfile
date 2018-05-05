@@ -12,10 +12,11 @@
 //   |            |----Release
 properties([parameters([
   choice(choices: 'Debug\nRelease', description: '', name: 'BUILD_TYPE'),
-  booleanParam(defaultValue: true, description: '', name: 'Linux'),
+  booleanParam(defaultValue: false, description: '', name: 'Linux'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv7'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv8'),
-  booleanParam(defaultValue: true, description: '', name: 'MacOS'),
+  booleanParam(defaultValue: false, description: '', name: 'MacOS'),
+  booleanParam(defaultValue: true, description: '', name: 'WinSM'),
   booleanParam(defaultValue: false, description: 'Whether build docs or not', name: 'Doxygen'),
   booleanParam(defaultValue: false, description: 'Whether build Java bindings', name: 'JavaBindings'),
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
@@ -438,6 +439,23 @@ pipeline {
               }
             }
           }
+        }
+      }
+    }
+    stage('Shared model win') {
+      when {
+        expression { return params.WinSM }
+      }
+      agent { label 'win' }
+      steps {
+        script {
+          def scmVars = checkout scm
+          sh """
+            cmake -Hshared_model \
+                  -Bbuild \
+                  -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake
+          """
+          sh "cmake --build build --config Debug"
         }
       }
     }
