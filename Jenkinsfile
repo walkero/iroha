@@ -450,12 +450,12 @@ pipeline {
       steps {
         script {
           def scmVars = checkout scm
-          sh """
+          bat """
             cmake -Hshared_model \
                   -Bbuild \
                   -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake
           """
-          sh "cmake --build build --config Debug"
+          bat "cmake --build build --config Debug"
         }
       }
     }
