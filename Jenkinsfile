@@ -27,10 +27,13 @@ pipeline {
               withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
                 if (env.CHANGE_ID) {
                   def slurper = new groovy.json.JsonSlurperClassic()
-                  sh """
-                    echo User email from commit: ${committerEmail}
-                    echo User email from plugin: ${BUILD_USER_EMAIL}
-                  """
+                  wrap([$class: 'BuildUser']) {
+                    sh """
+                      echo User email from commit: ${committerEmail}
+                      echo User email from plugin: ${BUILD_USER_EMAIL}
+                    """
+                  }
+
                   def jsonResponse = sh(script: """
                     curl -H "Authorization: token ${sorabot}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/hyperledger/iroha/pulls/${CHANGE_ID}/reviews
                   """, returnStdout: true).trim()
