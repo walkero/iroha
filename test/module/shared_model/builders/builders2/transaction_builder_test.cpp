@@ -42,10 +42,10 @@ class DefaultPolicy {
 template <typename T>
 class ExceptionPolicy {
  public:
-  std::unique_ptr<shared_model::interface::Transaction> operator()(
+  std::shared_ptr<shared_model::interface::Transaction> operator()(
       T &&transaction) const {
     throw 1;
-    return std::make_unique<T>(transaction.getTransport());
+    return std::make_shared<T>(transaction.getTransport());
   }
 };
 
@@ -72,8 +72,9 @@ TEST(GenericBuilderTest, TestTransactionExceptionPolicy) {
 }
 
 TEST(GenericBuilderTest, TestCopyOfState) {
-  TransactionBuilder<ProtoTransactionBuilder<>,
-                     DefaultPolicy<shared_model::proto::Transaction>>
+  TransactionBuilder<ProtoTransactionBuilder<SetterPolicy::Move>,
+                     DefaultPolicy<shared_model::proto::Transaction>,
+                     SetterPolicy::Move>
       builder;
 
   auto builder1 = builder.createdTime(1337);

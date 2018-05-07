@@ -22,25 +22,25 @@ auto makeBuilder(Builder &&b)
   return Builder(b);
 }
 
+template <typename NewBuilder, typename Builder>
+auto makeNewBuilder(Builder &&b)
+    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Copy,
+                        NewBuilder> {
+  return NewBuilder(b);
+}
+
+template <typename NewBuilder, typename Builder>
+auto makeNewBuilder(Builder &&b)
+    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Move,
+                        NewBuilder> {
+  return NewBuilder(std::move(b));
+}
+
 template <typename Builder>
 auto makeBuilder(Builder &&b)
     -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Move,
                         Builder> {
   return Builder(std::move(b));
-}
-
-template <int S, typename Builder>
-auto makeNewBuilder(Builder &&b)
-    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Copy,
-                        NewBuilderType<Builder, S>> {
-  return NewBuilderType<Builder, S>(b);
-}
-
-template <int S, typename Builder>
-auto makeNewBuilder(Builder &&b)
-    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Move,
-                        NewBuilderType<Builder, S>> {
-  return NewBuilderType<Builder, S>(std::move(b));
 }
 
 template <typename Builder, int Fields>
@@ -82,6 +82,13 @@ class BasicBuilder {
   template <typename Builder>
   BasicBuilder(Builder &&o)
       : backend_builder_(o.backend_builder_), build_func_(o.build_func_) {}
+
+  auto fromImplementation(const typename BackendBuilder::ImplType &impl) {
+    auto copy = makeNewBuilder<
+        NewBuilderType<BuilderImpl, (1 << BuilderImpl::TOTAL) - 1>>(*this);
+    copy.backend_builder_ = copy.backend_builder_.fromImplementation(impl);
+    return copy;
+  }
 
   BackendBuilder backend_builder_;
   BuildPolicy build_func_;
