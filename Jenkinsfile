@@ -19,13 +19,14 @@ pipeline {
       post {
         success {
           script {
+            def jenkinsCommiterEmail = ''
             env.READY_TO_MERGE = input message: 'Your PR has been built successfully. Merge it now?',
               parameters: [choice(name: 'Merge?', choices: 'no\nyes', description: 'Choose "yes" if you want to merge this PR with develop branch')]
             if (env.READY_TO_MERGE == 'yes') {
               def gitCommitterEmail = sh(
                 script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
               wrap([$class: 'BuildUser']) {
-                def jenkinsCommiterEmail = env.BUILD_USER_EMAIL
+                jenkinsCommiterEmail = env.BUILD_USER_EMAIL
               }
               withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
                 if (env.CHANGE_ID) {
