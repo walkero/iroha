@@ -4,6 +4,10 @@
 #include "backend/protobuf/transaction.hpp"
 #include "builders/builder2/basic_builder.hpp"
 
+/**
+ * Builder for shared_model::protocol::Transaction
+ * @tparam SetterPolicy
+ */
 template <SetterPolicy SetterPolicy = SetterPolicy::Copy>
 class ProtoTransactionBuilder {
  public:

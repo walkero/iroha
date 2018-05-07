@@ -3,6 +3,13 @@
 
 #include "builders/builder2/basic_builder.hpp"
 
+/**
+ * Builder which constructs shared_model::interface::Transaction objects.
+ * @tparam BackendBuilder - Builder used to construct implementation
+ * @tparam BuildPolicy - function used during build call
+ * @tparam SetterPolicy - Copy or Move builder state on each setter call
+ * @tparam S - number used for field verification
+ */
 template <typename BackendBuilder,
           typename BuildPolicy,
           SetterPolicy SetterPolicy = SetterPolicy::Copy,
@@ -39,6 +46,9 @@ class TransactionBuilder
     });
   }
 
+  /**
+   * Constructs builder with the same parameters, but S will be set to s
+   */
   template <int s>
   using NextBuilder = TransactionBuilder<BackendBuilder,
                                          BuildPolicy,
