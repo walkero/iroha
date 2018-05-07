@@ -2,7 +2,7 @@ pipeline {
   options {
     skipDefaultCheckout()
   }
-  agent { label 'x86_64' }
+  agent { label 'linux && x86_64' }
   stages {
     stage ('checkout') {
       steps {
@@ -35,6 +35,7 @@ pipeline {
                     curl -H "Authorization: token ${sorabot}" -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/hyperledger/iroha/pulls/${CHANGE_ID}
                   """, returnStdout: true).trim()
                   jsonResponsePR = slurper.parseText(jsonResponsePR)
+                  sh "echo mergeable: ${jsonResponsePR.mergeable}"
                   if (jsonResponsePR.mergeable && gitCommitterEmail == jenkinsCommiterEmail) {
                     echo 'This commit is mergeable'
                     // sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
