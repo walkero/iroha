@@ -15,13 +15,6 @@ constexpr SetterPolicy getSetterPolicy() {
   return std::decay_t<Builder>::kSetterPolicy;
 }
 
-template <typename Builder>
-auto makeBuilder(Builder &&b)
-    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Copy,
-                        Builder> {
-  return Builder(b);
-}
-
 template <typename NewBuilder, typename Builder>
 auto makeNewBuilder(Builder &&b)
     -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Copy,
@@ -38,8 +31,15 @@ auto makeNewBuilder(Builder &&b)
 
 template <typename Builder>
 auto makeBuilder(Builder &&b)
+    -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Copy,
+                        std::decay_t<Builder>> {
+  return Builder(b);
+}
+
+template <typename Builder>
+auto makeBuilder(Builder &&b)
     -> std::enable_if_t<getSetterPolicy<Builder>() == SetterPolicy::Move,
-                        Builder> {
+                        std::decay_t<Builder>> {
   return Builder(std::move(b));
 }
 

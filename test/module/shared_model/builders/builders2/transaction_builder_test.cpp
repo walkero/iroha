@@ -4,7 +4,7 @@
 #include "builders/builder2/transaction_builder.hpp"
 
 TEST(ProtoBuilderTest, TestProtoBuilderExample) {
-  ProtoTransactionBuilder<> builder;
+  ProtoTransactionBuilder<SetterPolicy::Move> builder;
   builder = builder.createdTime(1337);
 
   auto transaction = builder.creatorAccountId("Peter").build();
@@ -19,7 +19,7 @@ TEST(ProtoBuilderTest, TestProtoBuilderExample) {
 }
 
 TEST(ProtoBuilderTest, FromProtocolObject) {
-  ProtoTransactionBuilder<> builder;
+  ProtoTransactionBuilder<SetterPolicy::Move> builder;
 
   iroha::protocol::Transaction proto_transaction;
   proto_transaction.mutable_payload()->set_creator_account_id("Johny");
@@ -80,10 +80,14 @@ TEST(GenericBuilderTest, TestCopyOfState) {
   auto builder1 = builder.createdTime(1337);
   auto builder2(builder1);
 
-  auto t1 = builder1.creatorAccountId("John").build();
-  auto t2 = builder2.creatorAccountId("Stan").build();
+  auto builder3 = builder1.creatorAccountId("John");
+  auto builder4 = builder2.creatorAccountId("Stan");
+
+  auto t1 = builder3.build();
+  auto t2 = builder4.build();
 
   EXPECT_EQ(t1->createdTime(), t2->createdTime());
+  EXPECT_EQ(t1->createdTime(), 1337);
   EXPECT_EQ(t1->creatorAccountId(), "John");
   EXPECT_EQ(t2->creatorAccountId(), "Stan");
 }

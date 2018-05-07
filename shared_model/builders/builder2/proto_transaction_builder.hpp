@@ -42,14 +42,6 @@ class ProtoTransactionBuilder {
     return b;
   }
 
-//  ProtoTransactionBuilder() = default;
-//
-//  ProtoTransactionBuilder(const ProtoTransactionBuilder &) = delete;
-//  ProtoTransactionBuilder &operator=(const ProtoTransactionBuilder &) = delete;
-//
-//  ProtoTransactionBuilder(ProtoTransactionBuilder &&) = default;
-//  ProtoTransactionBuilder &operator=(ProtoTransactionBuilder &&) = default;
-
   static constexpr enum SetterPolicy kSetterPolicy = SetterPolicy;
  private:
   iroha::protocol::Transaction transaction_;
