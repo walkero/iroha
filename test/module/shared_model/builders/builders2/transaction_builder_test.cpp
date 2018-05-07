@@ -73,8 +73,7 @@ TEST(GenericBuilderTest, TestTransactionExceptionPolicy) {
 
 TEST(GenericBuilderTest, TestCopyOfState) {
   TransactionBuilder<ProtoTransactionBuilder<SetterPolicy::Move>,
-                     DefaultPolicy<shared_model::proto::Transaction>,
-                     SetterPolicy::Move>
+                     DefaultPolicy<shared_model::proto::Transaction>>
       builder;
 
   auto builder1 = builder.createdTime(1337);

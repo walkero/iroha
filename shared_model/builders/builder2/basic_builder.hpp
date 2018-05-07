@@ -109,7 +109,6 @@ auto transform(Builder &&b, Transformation &&t) {
 template <typename BuilderImpl,
           typename BackendBuilder,
           typename BuildPolicy,
-          SetterPolicy SetterPolicy,
           int S = 0>
 class BasicBuilder {
  public:
@@ -143,10 +142,8 @@ class BasicBuilder {
   BackendBuilder backend_builder_;
   BuildPolicy build_func_;
 
-  static_assert(BackendBuilder::kSetterPolicy == SetterPolicy,
-                "backend builder has different build policy");
-
-  static constexpr enum SetterPolicy kSetterPolicy = SetterPolicy;
+  static constexpr enum SetterPolicy kSetterPolicy =
+      BackendBuilder::kSetterPolicy;
   static constexpr int kS = S;
 };
 

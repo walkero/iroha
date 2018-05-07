@@ -7,26 +7,22 @@
  * Builder which constructs shared_model::interface::Transaction objects.
  * @tparam BackendBuilder - Builder used to construct implementation
  * @tparam BuildPolicy - function used during build call
- * @tparam SetterPolicy - Copy or Move builder state on each setter call
  * @tparam S - number used for field verification
  */
 template <typename BackendBuilder,
           typename BuildPolicy,
-          SetterPolicy SetterPolicy = SetterPolicy::Copy,
           int S = 0>
 class TransactionBuilder
     : public BasicBuilder<
-          TransactionBuilder<BackendBuilder, BuildPolicy, SetterPolicy, S>,
+          TransactionBuilder<BackendBuilder, BuildPolicy, S>,
           BackendBuilder,
           BuildPolicy,
-          SetterPolicy,
           S> {
  public:
   using Base = BasicBuilder<
-      TransactionBuilder<BackendBuilder, BuildPolicy, SetterPolicy, S>,
+      TransactionBuilder<BackendBuilder, BuildPolicy, S>,
       BackendBuilder,
       BuildPolicy,
-      SetterPolicy,
       S>;
 
   using Base::Base;
@@ -52,7 +48,6 @@ class TransactionBuilder
   template <int s>
   using NextBuilder = TransactionBuilder<BackendBuilder,
                                          BuildPolicy,
-                                         SetterPolicy,
                                          s>;
 };
 #endif  // IROHA_TRANSACTION_BUILDER_HPP
