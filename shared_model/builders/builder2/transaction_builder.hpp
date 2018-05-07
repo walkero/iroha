@@ -39,10 +39,16 @@ class TransactionBuilder
     });
   }
 
+  auto fromImplementation(const typename BackendBuilder::ImplType &impl) {
+    auto copy = makeNewBuilder<(1 << TOTAL) - 1>(*this);
+    copy.backend_builder_.fromImplementation(impl);
+    return copy;
+  }
+
   template <int s>
   using NextBuilder = TransactionBuilder<BackendBuilder,
                                          BuildPolicy,
                                          SetterPolicy,
-                                         S | (1 << s)>;
+                                         s>;
 };
 #endif  // IROHA_TRANSACTION_BUILDER_HPP

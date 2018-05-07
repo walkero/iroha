@@ -7,6 +7,9 @@
 template <SetterPolicy SetterPolicy = SetterPolicy::Copy>
 class ProtoTransactionBuilder {
  public:
+
+  using ImplType = iroha::protocol::Transaction;
+
   auto build() & {
     return shared_model::proto::Transaction(transaction_);
   }
@@ -16,14 +19,26 @@ class ProtoTransactionBuilder {
   }
 
   auto creatorAccountId(const shared_model::interface::types::AccountIdType& id) {
-    ProtoTransactionBuilder b = makeNextBuilder(*this);
+    ProtoTransactionBuilder b = makeBuilder(*this);
     b.transaction_.mutable_payload()->set_creator_account_id(id);
     return b;
   }
 
   auto createdTime(shared_model::interface::types::TimestampType created_time) {
-    ProtoTransactionBuilder b = makeNextBuilder(*this);
+    ProtoTransactionBuilder b = makeBuilder(*this);
     b.transaction_.mutable_payload()->set_created_time(created_time);
+    return b;
+  }
+
+  auto fromImplementation(const iroha::protocol::Transaction &transaction) {
+    ProtoTransactionBuilder b = makeBuilder(*this);
+    b.transaction_ = transaction;
+    return b;
+  }
+
+  auto fromImplementation(iroha::protocol::Transaction &&transaction) {
+    ProtoTransactionBuilder b = makeBuilder(*this);
+    b.transaction_ = transaction;
     return b;
   }
 

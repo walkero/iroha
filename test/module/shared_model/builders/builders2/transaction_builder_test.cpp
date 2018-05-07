@@ -18,6 +18,18 @@ TEST(ProtoBuilderTest, TestProtoBuilderExample) {
   EXPECT_EQ(transaction2.createdTime(), 1337);
 }
 
+TEST(ProtoBuilderTest, FromProtocolObject) {
+  ProtoTransactionBuilder<> builder;
+
+  iroha::protocol::Transaction proto_transaction;
+  proto_transaction.mutable_payload()->set_creator_account_id("Johny");
+  proto_transaction.mutable_payload()->set_created_time(1338);
+  auto transaction = builder.fromImplementation(proto_transaction).build();
+
+  EXPECT_EQ(transaction.creatorAccountId(), "Johny");
+  EXPECT_EQ(transaction.createdTime(), 1338);
+}
+
 template <typename T>
 class DefaultPolicy {
  public:
@@ -73,4 +85,18 @@ TEST(GenericBuilderTest, TestCopyOfState) {
   EXPECT_EQ(t1->createdTime(), t2->createdTime());
   EXPECT_EQ(t1->creatorAccountId(), "John");
   EXPECT_EQ(t2->creatorAccountId(), "Stan");
+}
+
+TEST(GenericBuilderTest, FromImplementation) {
+  TransactionBuilder<ProtoTransactionBuilder<>,
+                     DefaultPolicy<shared_model::proto::Transaction>>
+      builder;
+
+  iroha::protocol::Transaction proto_transaction;
+  proto_transaction.mutable_payload()->set_creator_account_id("Johny");
+  proto_transaction.mutable_payload()->set_created_time(1338);
+  auto transaction = builder.fromImplementation(proto_transaction).build();
+
+  EXPECT_EQ(transaction->creatorAccountId(), "Johny");
+  EXPECT_EQ(transaction->createdTime(), 1338);
 }
