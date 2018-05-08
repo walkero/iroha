@@ -20,14 +20,8 @@ pipeline {
         success {
           waitUntil {
             script {
-              def jenkinsCommitterEmail = ''
-              def jenkinsUser = ''
               def approvalsRequired = 1
-              wrap([$class: 'BuildUser']) {
-                jenkinsCommitterEmail = env.BUILD_USER_EMAIL
-                jenkinsUser = env.BUILD_USER
-              }
-              def mergeApproval = input message: 'Your PR has been built successfully. Merge it now?',
+              def mergeApproval = input message: 'Your PR has been built successfully. Merge it now?', submitterParameter: 'jenkinsCommitterEmail'
                 parameters: [booleanParam(defaultValue: false, description: '', name: "I confirm I want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}")]
               if (mergeApproval) {
                 def gitCommitterEmail = sh(
@@ -47,7 +41,7 @@ pipeline {
                       }
                     }
                     sh "echo approvals: ${approvalsRequired}"
-                    sh "echo jenkins email: ${jenkinsCommitterEmail}, git email: ${gitCommitterEmail}"
+                    sh "echo jenkins email: ${mergeApproval['jenkinsCommitterEmail']}, git email: ${gitCommitterEmail}"
                     if (approvalsRequired > 0) {
                       sh "echo 'Merge failed. Get more PR approvals before merging'"
                       return false
