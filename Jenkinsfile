@@ -24,8 +24,6 @@ pipeline {
               def mergeApproval = input message: 'Your PR has been built successfully. Merge it now?', submitterParameter: 'jenkinsCommitterEmail'
                 parameters: [booleanParam(defaultValue: false, description: '', name: "I confirm I want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}")]
               if (mergeApproval) {
-                def gitCommitterEmail = sh(
-                  script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
                 withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
                   if (env.CHANGE_ID) {
                     def slurper = new groovy.json.JsonSlurperClassic()
@@ -40,14 +38,8 @@ pipeline {
                         }
                       }
                     }
-                    sh "echo approvals: ${approvalsRequired}"
-                    sh "echo jenkins email: ${mergeApproval['jenkinsCommitterEmail']}, git email: ${gitCommitterEmail}"
                     if (approvalsRequired > 0) {
                       sh "echo 'Merge failed. Get more PR approvals before merging'"
-                      return false
-                    }
-                    else if (gitCommitterEmail != jenkinsCommitterEmail) {
-                      sh "echo 'Merge failed. Email of the commit does not match Jenkins user'"
                       return false
                     }
                     return true
@@ -56,7 +48,7 @@ pipeline {
               }
               else {
                 currentBuild.result = 'ABORTED'
-                error("Merge has been aborted by ${jenkinsUser}")
+                error("Merge has been aborted by ${mergeApproval['jenkinsCommitterEmail']}")
                 return true
               }
             }
