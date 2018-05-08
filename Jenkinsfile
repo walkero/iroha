@@ -23,7 +23,7 @@ pipeline {
               def jenkinsCommitterEmail = ''
               def approvalsRequired = 2
               env.READY_TO_MERGE = input message: 'Your PR has been built successfully. Merge it now?',
-                parameters: [choice(name: 'Merge?', choices: 'no\nyes', description: 'Choose "yes" if you want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}')]
+                parameters: [choice(name: 'Merge?', choices: 'no\nyes', description: "Choose 'yes' if you want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}")]
               if (env.READY_TO_MERGE == 'yes') {
                 def gitCommitterEmail = sh(
                   script: 'git --no-pager show -s --format=\'%ae\'', returnStdout: true).trim()
