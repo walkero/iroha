@@ -47,6 +47,7 @@ pipeline {
                       }
                     }
                     sh "echo approvals: ${approvalsRequired}"
+                    sh "echo jenkins email: ${jenkinsCommitterEmail}, git email: ${gitCommitterEmail}"
                     if (approvalsRequired > 0) {
                       sh "echo 'Merge failed. Get more PR approvals before merging'"
                       return false
