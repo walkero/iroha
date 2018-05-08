@@ -21,7 +21,7 @@ pipeline {
           waitUntil {
             script {
               def approvalsRequired = 1
-              def mergeApproval = input message: 'Your PR has been built successfully. Merge it now?', submitterParameter: 'jenkinsCommitterEmail'
+              def mergeApproval = input message: 'Your PR has been built successfully. Merge it now?', submitterParameter: 'jenkinsCommitterEmail',
                 parameters: [booleanParam(defaultValue: false, description: '', name: "I confirm I want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}")]
               if (mergeApproval) {
                 withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
