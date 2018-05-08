@@ -98,10 +98,6 @@ namespace torii {
               response.set_tx_status(
                   iroha::protocol::TxStatus::STATELESS_VALIDATION_SUCCESS);
 
-              log_->info("Torii: adding item to cache: {}, status {} ",
-                         tx_hash.hex(),
-                         response.tx_status());
-              cache_->addItem(tx_hash, response);
               // Send transaction to iroha
               tx_processor_->transactionHandle(
                   std::make_shared<shared_model::proto::Transaction>(
@@ -124,6 +120,10 @@ namespace torii {
                   iroha::protocol::TxStatus::STATELESS_VALIDATION_FAILED);
               response.set_error_message(std::move(error.error));
             });
+    log_->info("Torii: adding item to cache: {}, status {} ",
+               tx_hash.hex(),
+               response.tx_status());
+    cache_->addItem(tx_hash, response);
   }
 
   grpc::Status CommandService::Torii(
