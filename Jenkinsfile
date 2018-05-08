@@ -21,6 +21,7 @@ pipeline {
           waitUntil {
             script {
               def jenkinsCommitterEmail = ''
+              def jenkinsUser = ''
               def approvalsRequired = 1
               env.READY_TO_MERGE = input message: 'Your PR has been built successfully. Merge it now?',
                 parameters: [choice(name: 'Merge?', choices: 'no\nyes', description: "Choose 'yes' if you want to merge ${CHANGE_BRANCH} into ${CHANGE_TARGET}")]
