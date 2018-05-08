@@ -51,7 +51,7 @@ pipeline {
                       sh "echo 'Merge failed. Get more PR approvals before merging'"
                       return false
                     }
-                    elif (gitCommitterEmail != jenkinsCommitterEmail) {
+                    else if (gitCommitterEmail != jenkinsCommitterEmail) {
                       sh "echo 'Merge failed. Email of the commit does not match Jenkins user'"
                       return false
                     }
