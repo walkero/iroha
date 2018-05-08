@@ -28,4 +28,5 @@ target_link_libraries(command_execution
         common_execution
         rxcpp
         shared_model_default_builders
+        shared_model_amount_utils
         )
