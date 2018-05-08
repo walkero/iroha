@@ -60,7 +60,9 @@ pipeline {
                 }
               }
               else {
-                sh "Merge has been aborted by ${jenkinsUser}"
+                currentBuild.result = 'ABORTED'
+                error("Merge has been aborted by ${jenkinsUser}")
+                return true
               }
             }
           }
