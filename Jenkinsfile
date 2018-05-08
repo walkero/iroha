@@ -53,7 +53,7 @@ pipeline {
                       sh "echo 'Merge failed. Email of the commit does not match Jenkins user'"
                       return false
                     }
-                    return
+                    return true
                   }
                 }
               }
