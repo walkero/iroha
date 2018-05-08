@@ -31,6 +31,7 @@ pipeline {
                 wrap([$class: 'BuildUser']) {
                   jenkinsCommitterEmail = env.BUILD_USER_EMAIL
                   jenkinsUser = env.BUILD_USER
+                  sh "User is ${env.BUILD_USER}"
                 }
                 withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
                   if (env.CHANGE_ID) {
