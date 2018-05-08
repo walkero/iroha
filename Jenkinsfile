@@ -42,11 +42,11 @@ pipeline {
                 }
                 return true
               }
+              withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
+                sh('echo This commit is mergeable')
+                // sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
+              }
             }
-          }
-          withCredentials([string(credentialsId: 'jenkins-integration-test', variable: 'sorabot')]) {
-            sh('echo This commit is mergeable')
-            // sh("git push https://${sorabot}@github.com/hyperledger/iroha.git HEAD:ci-integration-develop")
           }
         }
       }
