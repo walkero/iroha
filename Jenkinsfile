@@ -68,7 +68,10 @@ pipeline {
       }
       parallel {
         stage ('Linux') {
-          when { expression { return params.Linux } }
+          when {
+            beforeAgent true
+            expression { return params.Linux }
+          }
           agent { label 'x86_64' }
           steps {
             script {
@@ -96,7 +99,10 @@ pipeline {
           }
         }
         stage('ARMv7') {
-          when { expression { return params.ARMv7 } }
+          when {
+            beforeAgent true
+            expression { return params.ARMv7 } 
+          }
           agent { label 'armv7' }
           steps {
             script {
@@ -124,7 +130,10 @@ pipeline {
           }
         }
         stage('ARMv8') {
-          when { expression { return params.ARMv8 } }
+          when {
+            beforeAgent true
+            expression { return params.ARMv8 } 
+          }
           agent { label 'armv8' }
           steps {
             script {
@@ -152,7 +161,10 @@ pipeline {
           }
         }
         stage('MacOS'){
-          when { expression { return params.MacOS } }
+          when {
+            beforeAgent true
+            expression { return params.MacOS }
+          }
           agent { label 'mac' }
           steps {
             script {
@@ -256,7 +268,10 @@ pipeline {
       }
       parallel {
         stage('Linux') {
-          when { expression { return params.Linux } }
+          when {
+            beforeAgent true
+            expression { return params.Linux }
+          }
           agent { label 'x86_64' }
           steps {
             script {
@@ -274,7 +289,10 @@ pipeline {
           }
         }
         stage('ARMv7') {
-          when { expression { return params.ARMv7 } }
+          when {
+            beforeAgent true
+            expression { return params.ARMv7 }
+          }
           agent { label 'armv7' }
           steps {
             script {
@@ -292,7 +310,10 @@ pipeline {
           }           
         }
         stage('ARMv8') {
-          when { expression { return params.ARMv8 } }
+          when {
+            beforeAgent true
+            expression { return params.ARMv8 }
+          }
           agent { label 'armv8' }
           steps {
             script {
@@ -310,7 +331,10 @@ pipeline {
           }          
         }
         stage('MacOS') {
-          when { expression { return params.MacOS } }
+          when {
+            beforeAgent true
+            expression { return params.MacOS }
+          }
           agent { label 'mac' }
           steps {
             script {
@@ -342,6 +366,7 @@ pipeline {
     }
     stage('Build docs') {
       when {
+        beforeAgent true
         allOf {
           expression { return params.Doxygen }
           expression { GIT_LOCAL_BRANCH ==~ /(master|develop)/ }
@@ -362,6 +387,7 @@ pipeline {
     }
     stage('Build bindings') {
       when {
+        beforeAgent true
         anyOf {
           expression { return params.PythonBindings }
           expression { return params.JavaBindings }
