@@ -490,7 +490,7 @@ pipeline {
                   -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake
             cmake --build build
             cd build
-            ctest --output-on-failure
+            ctest --output-on-failure -C debug
           """
         }
       }
