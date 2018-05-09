@@ -31,17 +31,16 @@ const shared_model::crypto::Keypair kAdminKeypair =
     shared_model::crypto::DefaultCryptoAlgorithmType::generateKeypair();
 auto checkStatelessValid = [](auto &status) {
   ASSERT_NO_THROW(
-      boost::get<shared_model::detail::PolymorphicWrapper<
-          shared_model::interface::StatelessValidTxResponse>>(status.get()));
+      boost::get<const shared_model::interface::StatelessValidTxResponse>(
+          status.get()));
 };
 auto checkStatelessInvalid = [](auto &status) {
   ASSERT_NO_THROW(
-      boost::get<shared_model::detail::PolymorphicWrapper<
-          shared_model::interface::StatelessFailedTxResponse>>(status.get()));
+      boost::get<const shared_model::interface::StatelessFailedTxResponse>(
+          status.get()));
 };
 auto checkProposal = [](auto &proposal) {
   ASSERT_EQ(proposal->transactions().size(), 1);
-
 };
 auto checkStatefulInvalid = [](auto &block) {
   ASSERT_EQ(block->transactions().size(), 0);

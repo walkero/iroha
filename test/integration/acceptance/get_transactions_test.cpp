@@ -120,8 +120,8 @@ TEST_F(GetTransactions, HaveGetAllTx) {
         interface::SpecifiedVisitor<interface::TransactionsResponse>(),
         status.get());
     ASSERT_TRUE(resp);
-    ASSERT_EQ(resp.value()->transactions().size(), 1);
-    ASSERT_EQ(*resp.value()->transactions()[0].operator->(), dummy_tx);
+    ASSERT_EQ(resp.value().transactions().size(), 1);
+    ASSERT_EQ(*resp.value().transactions()[0].operator->(), dummy_tx);
   };
 
   IntegrationTestFramework()
@@ -146,8 +146,8 @@ TEST_F(GetTransactions, HaveGetMyTx) {
         interface::SpecifiedVisitor<interface::TransactionsResponse>(),
         status.get());
     ASSERT_TRUE(resp);
-    ASSERT_EQ(resp.value()->transactions().size(), 1);
-    ASSERT_EQ(*resp.value()->transactions()[0].operator->(), dummy_tx);
+    ASSERT_EQ(resp.value().transactions().size(), 1);
+    ASSERT_EQ(*resp.value().transactions()[0].operator->(), dummy_tx);
   };
 
   IntegrationTestFramework()
@@ -202,7 +202,7 @@ TEST_F(GetTransactions, InexistentHash) {
         interface::SpecifiedVisitor<interface::TransactionsResponse>(),
         status.get());
     ASSERT_TRUE(resp);
-    ASSERT_EQ(resp.value()->transactions().size(), 0);
+    ASSERT_EQ(resp.value().transactions().size(), 0);
   };
 
   IntegrationTestFramework()
@@ -225,7 +225,7 @@ TEST_F(GetTransactions, OtherUserTx) {
         interface::SpecifiedVisitor<interface::TransactionsResponse>(),
         status.get());
     ASSERT_TRUE(resp);
-    ASSERT_EQ(resp.value()->transactions().size(), 0);
+    ASSERT_EQ(resp.value().transactions().size(), 0);
   };
 
   auto tx = makeUserWithPerms({shared_model::permissions::can_get_my_txs});

@@ -41,9 +41,9 @@ namespace shared_model {
      */
     class TransactionResponse : public PRIMITIVE(TransactionResponse) {
      private:
-      /// PolymorphicWrapper shortcut type
+      /// const reference shortcut type
       template <typename... Value>
-      using wrap = boost::variant<detail::PolymorphicWrapper<Value>...>;
+      using wrap = boost::variant<const Value &...>;
 
      public:
       /// Type of variant, that handle all concrete tx responses in the system
@@ -65,7 +65,7 @@ namespace shared_model {
       /**
        * @return attached concrete tx response
        */
-      virtual const ResponseVariantType &get() const = 0;
+      virtual ResponseVariantType get() const = 0;
 
       // ------------------------| Primitive override |-------------------------
 

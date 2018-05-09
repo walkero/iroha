@@ -296,8 +296,8 @@ TEST_F(TransferAsset, LongDesc) {
   std::string long_desc(100000, 'a');
   auto invalid_tx = completeTx(
       baseTx().transferAsset(kUser1Id, kUser2Id, kAsset, long_desc, kAmount));
-  using ExpectedStatusType = shared_model::detail::PolymorphicWrapper<
-      shared_model::interface::StatelessFailedTxResponse>;
+  using ExpectedStatusType =
+      const shared_model::interface::StatelessFailedTxResponse;
   IntegrationTestFramework itf;
   itf.setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))

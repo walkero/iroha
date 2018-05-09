@@ -30,7 +30,14 @@ namespace shared_model {
     class ToStringVisitor : public boost::static_visitor<std::string> {
      public:
       template <typename InputType>
-      std::string operator()(const InputType &operand) const {
+      auto operator()(const InputType &operand) const
+          -> decltype(operand.toString(), std::string()) {
+        return operand.toString();
+      }
+
+      template <typename InputType>
+      auto operator()(const InputType &operand) const
+          -> decltype(operand->toString(), std::string()) {
         return operand->toString();
       }
     };
@@ -44,7 +51,14 @@ namespace shared_model {
     class OldModelCreatorVisitor : public boost::static_visitor<T> {
      public:
       template <typename InputType>
-      T operator()(const InputType &operand) const {
+      auto operator()(const InputType &operand) const
+          -> decltype(operand.makeOldModel(), T()) {
+        return operand.makeOldModel();
+      }
+
+      template <typename InputType>
+      auto operator()(const InputType &operand) const
+          -> decltype(operand->makeOldModel(), T()) {
         return operand->makeOldModel();
       }
     };
