@@ -13,11 +13,7 @@ pipeline {
           agent { label 'linux && x86_64' }
           steps {
             script {
-              checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: 
-                [[name: '**']], doGenerateSubmoduleConfigurations: false, extensions: 
-                [[$class: 'LocalBranch'], [$class: 'CleanCheckout'], [$class: 'PruneStaleBranch']], 
-                submoduleCfg: [], userRemoteConfigs: 
-                [[credentialsId: 'sorabot-github-user', url: 'https://github.com/hyperledger/iroha.git']]]
+              checkout scm
             }
           }
         }
@@ -48,10 +44,11 @@ pipeline {
                   }
                   return true
                 }
+
                 checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: 
                   [[name: "${CHANGE_BRANCH}"]], doGenerateSubmoduleConfigurations: false, extensions: 
-                  [[$class: 'PreBuildMerge', options: [fastForwardMode: 'FF', mergeRemote: 'origin', 
-                  mergeStrategy: 'default', mergeTarget: "${CHANGE_TARGET}"]], [$class: 'LocalBranch'], 
+                  [[$class: 'PreBuildMerge', options: [fastForwardMode: 'FF_ONLY', mergeRemote: 'origin', 
+                  mergeStrategy: 'default', mergeTarget: "${CHANGE_TARGET}", squash: true]], [$class: 'LocalBranch'], 
                   [$class: 'CleanCheckout'], [$class: 'PruneStaleBranch'], [$class: 'UserIdentity', 
                   email: 'jenkins@soramitsu.co.jp', name: 'jenkins']], submoduleCfg: [], userRemoteConfigs: 
                   [[credentialsId: 'sorabot-github-user', url: 'https://github.com/hyperledger/iroha.git']]]
