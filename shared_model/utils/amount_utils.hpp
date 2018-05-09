@@ -24,40 +24,46 @@
 #include "builders/protobuf/common_objects/proto_amount_builder.hpp"
 #include "common/result.hpp"
 
-boost::multiprecision::uint256_t increaseValuePrecision(
-    boost::multiprecision::uint256_t value, int degree);
+namespace shared_model {
+  namespace detail {
+    boost::multiprecision::uint256_t increaseValuePrecision(
+        boost::multiprecision::uint256_t value, int degree);
 
-/**
- * Sums up two amounts.
- * Result is returned
- * @param a left term
- * @param b right term
- */
-iroha::expected::PolymorphicResult<shared_model::interface::Amount, std::string>
-operator+(const shared_model::interface::Amount &a,
-          const shared_model::interface::Amount &b);
+    /**
+     * Sums up two amounts.
+     * Result is returned
+     * @param a left term
+     * @param b right term
+     */
+    iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                                       std::string>
+    operator+(const shared_model::interface::Amount &a,
+              const shared_model::interface::Amount &b);
 
-/**
- * Subtracts two amounts.
- * Result is returned
- * @param a left term
- * @param b right term
- */
-iroha::expected::PolymorphicResult<shared_model::interface::Amount, std::string>
-operator-(const shared_model::interface::Amount &a,
-          const shared_model::interface::Amount &b);
+    /**
+     * Subtracts two amounts.
+     * Result is returned
+     * @param a left term
+     * @param b right term
+     */
+    iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                                       std::string>
+    operator-(const shared_model::interface::Amount &a,
+              const shared_model::interface::Amount &b);
 
-/**
- * Make amount with bigger precision
- * Result is returned
- * @param a amount
- * @param b right term
- */
-iroha::expected::PolymorphicResult<shared_model::interface::Amount, std::string>
-makeAmountWithPrecision(const shared_model::interface::Amount &amount,
-                        const int new_precision);
+    /**
+     * Make amount with bigger precision
+     * Result is returned
+     * @param a amount
+     * @param b right term
+     */
+    iroha::expected::PolymorphicResult<shared_model::interface::Amount,
+                                       std::string>
+    makeAmountWithPrecision(const shared_model::interface::Amount &amount,
+                            const int new_precision);
 
-int compareAmount(const shared_model::interface::Amount &a,
-                  const shared_model::interface::Amount &b);
-
+    int compareAmount(const shared_model::interface::Amount &a,
+                      const shared_model::interface::Amount &b);
+  }  // namespace detail
+}  // namespace shared_model
 #endif  // IROHA_AMOUNT_UTILS_HPP

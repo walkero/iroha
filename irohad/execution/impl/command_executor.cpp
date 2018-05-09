@@ -24,6 +24,8 @@
 #include "utils/amount_utils.hpp"
 #include "validators/permissions.hpp"
 
+using namespace shared_model::detail;
+
 namespace iroha {
 
   expected::Error<ExecutionError> makeExecutionError(

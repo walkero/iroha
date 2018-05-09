@@ -19,6 +19,8 @@
 
 #include "utils/amount_utils.hpp"
 
+using namespace shared_model::detail;
+
 class AmountTest : public testing::Test {};
 
 /**
