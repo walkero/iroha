@@ -16,7 +16,7 @@ namespace shared_model {
     using VerifiedProposalBuilder =
         TemplateProposalBuilder<0,
                                 validation::DefaultVerifiedProposalValidator,
-                                VerifiedProposalBuilder>;
+                                VerifiedProposal>;
   }
 }  // namespace shared_model
 
