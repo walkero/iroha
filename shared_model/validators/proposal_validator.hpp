@@ -18,16 +18,9 @@
 #ifndef IROHA_PROPOSAL_VALIDATOR_HPP
 #define IROHA_PROPOSAL_VALIDATOR_HPP
 
-#include <boost/format.hpp>
-#include <regex>
-#include "datetime/time.hpp"
-#include "interfaces/common_objects/types.hpp"
 #include "interfaces/iroha_internal/proposal.hpp"
-#include "validators/answer.hpp"
-#include "validators/container_fields/height_validator.hpp"
+#include "validators/container_fields/container_validator.hpp"
 #include "validators/container_fields/non_empty_transactions_validator.hpp"
-
-// TODO 22/01/2018 x3medima17: write stateless validator IR-836
 
 namespace shared_model {
   namespace validation {
@@ -37,37 +30,29 @@ namespace shared_model {
      */
     template <typename FieldValidator, typename TransactionValidator>
     class ProposalValidator
-        : public HeightValidator,
-          public NonEmptyTransactionsValidator<TransactionValidator> {
+        : public ContainerValidator<
+              interface::Proposal,
+              FieldValidator,
+              NonEmptyTransactionsValidator<TransactionValidator>> {
      public:
-      ProposalValidator(FieldValidator field_validator = FieldValidator())
-          : field_validator_(field_validator),
-            NonEmptyTransactionsValidator<TransactionValidator>(
-                TransactionValidator(field_validator_)) {}
+      ProposalValidator()
+          : ContainerValidator<
+                interface::Proposal,
+                FieldValidator,
+                NonEmptyTransactionsValidator<TransactionValidator>>() {}
+
       /**
-       * Applies validation on proposal
-       * @param proposal
+       * Applies validation on block
+       * @param block
        * @return Answer containing found error if any
        */
-      Answer validate(const interface::Proposal &prop) const {
-        using TransactionsValidator =
-        NonEmptyTransactionsValidator<TransactionValidator>;
-
-        Answer answer;
-        ReasonsGroupType reason;
-        reason.first = "Proposal";
-        field_validator_.validateCreatedTime(
-            reason, prop.createdTime());
-        HeightValidator::validateHeight(reason, prop.height());
-        TransactionsValidator::validateTransactions(reason, prop.transactions());
-        if (not reason.second.empty()) {
-          answer.addReason(std::move(reason));
-        }
-        return answer;
+      Answer validate(const interface::Proposal &proposal) const {
+        return ContainerValidator<
+            interface::Proposal,
+            FieldValidator,
+            NonEmptyTransactionsValidator<TransactionValidator>>::
+            validate(proposal, "Proposal");
       }
-
-     private:
-      FieldValidator field_validator_;
     };
 
   }  // namespace validation

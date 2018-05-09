@@ -17,15 +17,17 @@
 namespace shared_model {
   namespace validation {
 
-    template <typename Iface, typename FieldValidator, TransactionsValidator>
+    template <typename Iface,
+              typename FieldValidator,
+              typename TransactionsValidator>
     class ContainerValidator : public HeightValidator,
                                public TransactionsValidator {
      public:
       ContainerValidator(FieldValidator field_validator = FieldValidator())
-          : field_validator_(field_validator),
-            TransactionsValidator(
-                typename TransactionsValidator::TransactionValidator(
-                    field_validator_)) {}
+          : TransactionsValidator(
+                typename TransactionsValidator::TransactionValidatorType(
+                    field_validator)),
+            field_validator_(field_validator) {}
 
       Answer validate(const Iface &cont, std::string reason_name) const {
         Answer answer;

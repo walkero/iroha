@@ -6,13 +6,8 @@
 #ifndef IROHA_VERIFIED_PROPOSAL_VALIDATOR_HPP
 #define IROHA_VERIFIED_PROPOSAL_VALIDATOR_HPP
 
-#include <boost/format.hpp>
-#include "datetime/time.hpp"
-#include "interfaces/common_objects/types.hpp"
 #include "interfaces/iroha_internal/verified_proposal.hpp"
-#include "utils/polymorphic_wrapper.hpp"
-#include "validators/answer.hpp"
-#include "validators/container_fields/height_validator.hpp"
+#include "validators/container_fields/container_validator.hpp"
 #include "validators/container_fields/transactions_validator.hpp"
 
 namespace shared_model {
@@ -20,14 +15,15 @@ namespace shared_model {
 
     template <typename FieldValidator, typename TransactionValidator>
     class VerifiedProposalValidator
-        : public HeightValidator,
-          public TransactionsValidator<TransactionValidator> {
+        : public ContainerValidator<
+              interface::VerifiedProposal,
+              FieldValidator,
+              TransactionsValidator<TransactionValidator>> {
      public:
-      VerifiedProposalValidator(
-          FieldValidator field_validator = FieldValidator())
-          : field_validator_(field_validator),
-            TransactionsValidator<TransactionValidator>(
-                TransactionValidator(field_validator_)) {}
+      VerifiedProposalValidator()
+          : ContainerValidator<interface::VerifiedProposal,
+                               FieldValidator,
+                               TransactionsValidator<TransactionValidator>>() {}
 
       /**
        * Applies validation on block
@@ -36,22 +32,11 @@ namespace shared_model {
        */
       Answer validate(
           const interface::VerifiedProposal &verified_proposal) const {
-        Answer answer;
-        ReasonsGroupType reason;
-        reason.first = "VerifiedProposal";
-        field_validator_.validateCreatedTime(reason,
-                                             verified_proposal.createdTime());
-        HeightValidator::validateHeight(reason, verified_proposal.height());
-        TransactionsValidator<TransactionValidator>::validateTransactions(
-            reason, verified_proposal.transactions());
-        if (not reason.second.empty()) {
-          answer.addReason(std::move(reason));
-        }
-        return answer;
+        return ContainerValidator<interface::VerifiedProposal,
+                                  FieldValidator,
+                                  TransactionsValidator<TransactionValidator>>::
+            validate(verified_proposal, "verified_proposal");
       }
-
-     private:
-      FieldValidator field_validator_;
     };
 
   }  // namespace validation
