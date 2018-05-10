@@ -20,7 +20,7 @@
 
 #include "interfaces/iroha_internal/block.hpp"
 #include "validators/container_fields/container_validator.hpp"
-#include "validators/container_fields/non_empty_transactions_validator.hpp"
+#include "validators/container_fields/transactions_validator.hpp"
 
 namespace shared_model {
   namespace validation {
@@ -30,16 +30,17 @@ namespace shared_model {
      */
     template <typename FieldValidator, typename TransactionValidator>
     class BlockValidator
+        // TODO IR-1295 10.05.18 Use NonEmptyTransactionValidator when 1295 is
+        // implemented
         : public ContainerValidator<
               interface::Block,
               FieldValidator,
-              NonEmptyTransactionsValidator<TransactionValidator>> {
+              TransactionsValidator<TransactionValidator>> {
      public:
       BlockValidator()
-          : ContainerValidator<
-                interface::Block,
-                FieldValidator,
-                NonEmptyTransactionsValidator<TransactionValidator>>() {}
+          : ContainerValidator<interface::Block,
+                               FieldValidator,
+                               TransactionsValidator<TransactionValidator>>() {}
 
       /**
        * Applies validation on block
@@ -47,11 +48,11 @@ namespace shared_model {
        * @return Answer containing found error if any
        */
       Answer validate(const interface::Block &block) const {
-        return ContainerValidator<interface::Block,
-                                  FieldValidator,
-                                  NonEmptyTransactionsValidator<
-                                      TransactionValidator>>::validate(block,
-                                                                       "Block");
+        return ContainerValidator<
+            interface::Block,
+            FieldValidator,
+            TransactionsValidator<TransactionValidator>>::validate(block,
+                                                                   "Block");
       }
     };
 

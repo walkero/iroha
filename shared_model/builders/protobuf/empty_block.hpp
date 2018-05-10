@@ -16,7 +16,7 @@ namespace shared_model {
     using UnsignedEmptyBlockBuilder = TemplateEmptyBlockBuilder<
         0,
         shared_model::validation::DefaultEmptyBlockValidator,
-        shared_model::proto::Block>;
+        shared_model::proto::EmptyBlock>;
   }  // namespace proto
 }  // namespace shared_model
 
