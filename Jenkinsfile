@@ -450,18 +450,14 @@ pipeline {
       steps {
         script {
           def scmVars = checkout scm
-          bat """
-            %comspec% /k "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Auxiliary\\Build\\vcvars32.bat"
-            del /q /f build
-            del /q /f external
-            del /q /f schema\\*.h
-            del /q /f schema\\*.cc
+          sh """
+            # %comspec% /k "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Auxiliary\\Build\\vcvars32.bat";
             cmake -Hshared_model \
                   -Bbuild \
-                  -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake \
-            cmake --build build
-            cd build
-            ctest --output-on-failure -C debug
+                  -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake;
+            cmake --build build;
+            cd build;
+            ctest --output-on-failure -C debug;
           """
         }
       }
