@@ -189,10 +189,57 @@ def get_account_asset():
     print(query_response)
 
 
-tx1()
-tx2()
-tx3()
-tx4()
-get_asset()
-get_account_asset()
-print("done!")
+# tx1()
+# tx2()
+# tx3()
+# tx4()
+# get_asset()
+# get_account_asset()
+# print("done!")
+
+tx = tx_builder.creatorAccountId(creator) \
+    .txCounter(1) \
+    .createdTime(current_time) \
+    .createAsset("coolcoin", "test", 2) \
+    .build()
+
+send_tx(tx, key_pair)
+print_status_streaming(tx)
+#-----------------------------------------
+alice_priv = open("alice@test.priv", "r").read()
+alice_pub = open("alice@test.pub", "r").read()
+alice_kp = crypto.convertFromExisting(admin_pub, admin_priv)
+
+tx = tx_builder.creatorAccountId(creator) \
+    .txCounter(1) \
+    .createdTime(current_time) \
+    .createAccount("alice", "test", alice_kp.publicKey()).build()
+
+send_tx(tx, key_pair)
+print_status_streaming(tx)
+#-----------------------------------------
+tx = tx_builder.creatorAccountId(creator) \
+    .txCounter(2) \
+    .createdTime(current_time) \
+    .addAssetQuantity("admin@test", "coolcoin#test", "1000.00").build()
+
+send_tx(tx, key_pair)
+print_status_streaming(tx)
+#-----------------------------------------
+tx = tx_builder.creatorAccountId(creator) \
+    .txCounter(4) \
+    .createdTime(current_time) \
+    .transferAsset("admin@test", "alice@test", "coolcoin#test", "Some message", "2.00").build()
+
+send_tx(tx, key_pair)
+print_status_streaming(tx)
+#-----------------------------------------
+query = query_builder.creatorAccountId("alice@test") \
+    .createdTime(current_time) \
+    .queryCounter(11) \
+    .getAccountAssetTransactions("alice@test", "coolcoin#test") \
+    .build()
+
+query_response = send_query(query, key_pair)
+
+print(query_response)
