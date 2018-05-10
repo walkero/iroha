@@ -1,9 +1,9 @@
 // Overall pipeline looks like the following
-//         
+//
 //   |--Linux-----|----Debug
-//   |            |----Release 
+//   |            |----Release
 //   |    OR
-//   |           
+//   |
 //-- |--Linux ARM-|----Debug
 //   |            |----Release
 //   |    OR
@@ -15,7 +15,7 @@ properties([parameters([
   booleanParam(defaultValue: true, description: '', name: 'Linux'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv7'),
   booleanParam(defaultValue: false, description: '', name: 'ARMv8'),
-  booleanParam(defaultValue: true, description: '', name: 'MacOS'),
+  booleanParam(defaultValue: false, description: '', name: 'MacOS'),
   booleanParam(defaultValue: false, description: 'Whether build docs or not', name: 'Doxygen'),
   booleanParam(defaultValue: false, description: 'Whether build Java bindings', name: 'JavaBindings'),
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
@@ -69,7 +69,7 @@ pipeline {
       parallel {
         stage ('Linux') {
           when { expression { return params.Linux } }
-          agent { label 'x86_64' }
+          agent { label 'x86_64 && docker1' }
           steps {
             script {
               debugBuild = load ".jenkinsci/debug-build.groovy"
@@ -104,7 +104,7 @@ pipeline {
               coverage = load ".jenkinsci/selected-branches-coverage.groovy"
               if (!params.Linux && !params.ARMv8 && !params.MacOS && (coverage.selectedBranchesCoverage(['develop', 'master']))) {
                 debugBuild.doDebugBuild(true)
-              }              
+              }
               else {
                 debugBuild.doDebugBuild()
               }
@@ -233,7 +233,7 @@ pipeline {
                       def artifacts = load ".jenkinsci/artifacts.groovy"
                       def commit = env.GIT_COMMIT
                       filePaths = [ '\$(pwd)/build/*.tar.gz' ]
-                      artifacts.uploadArtifacts(filePaths, sprintf('/iroha/macos/%1$s-%2$s-%3$s', [GIT_LOCAL_BRANCH, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)]))                        
+                      artifacts.uploadArtifacts(filePaths, sprintf('/iroha/macos/%1$s-%2$s-%3$s', [GIT_LOCAL_BRANCH, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)]))
                     }
                   }
                   finally {
@@ -252,7 +252,7 @@ pipeline {
     }
     stage('Build Release') {
       when {
-        expression { params.BUILD_TYPE == 'Release' }      
+        expression { params.BUILD_TYPE == 'Release' }
       }
       parallel {
         stage('Linux') {
@@ -289,7 +289,7 @@ pipeline {
                 post.linuxPostStep()
               }
             }
-          }           
+          }
         }
         stage('ARMv8') {
           when { expression { return params.ARMv8 } }
@@ -307,7 +307,7 @@ pipeline {
                 post.linuxPostStep()
               }
             }
-          }          
+          }
         }
         stage('MacOS') {
           when { expression { return params.MacOS } }
@@ -408,7 +408,7 @@ pipeline {
             iC.inside("-v /tmp/${env.GIT_COMMIT}/entrypoint.sh:/entrypoint.sh:ro -v /tmp/${env.GIT_COMMIT}/bindings-artifact:/tmp/bindings-artifact") {
               bindings.doAndroidBindings(params.ABABIVersion)
             }
-          }          
+          }
         }
       }
       post {

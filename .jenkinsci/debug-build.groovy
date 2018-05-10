@@ -7,7 +7,7 @@ def doDebugBuild(coverageEnabled=false) {
   def platform = sh(script: 'uname -m', returnStdout: true).trim()
   // params are always null unless job is started
   // this is the case for the FIRST build only.
-  // So just set this to same value as default. 
+  // So just set this to same value as default.
   // This is a known bug. See https://issues.jenkins-ci.org/browse/JENKINS-41929
   if (parallelism == null) {
     parallelism = 4
@@ -21,22 +21,22 @@ def doDebugBuild(coverageEnabled=false) {
                                            "${env.GIT_RAW_BASE_URL}/${env.GIT_PREVIOUS_COMMIT}/docker/develop/Dockerfile",
                                            "${env.GIT_RAW_BASE_URL}/develop/docker/develop/Dockerfile",
                                            ['PARALLELISM': parallelism])
-  if (GIT_LOCAL_BRANCH == 'develop' && manifest.manifestSupportEnabled()) {
-    manifest.manifestCreate("${DOCKER_REGISTRY_BASENAME}:develop-build", 
-      ["${DOCKER_REGISTRY_BASENAME}:x86_64-develop-build", 
-       "${DOCKER_REGISTRY_BASENAME}:armv7l-develop-build", 
-       "${DOCKER_REGISTRY_BASENAME}:aarch64-develop-build"])
-    manifest.manifestAnnotate("${DOCKER_REGISTRY_BASENAME}:develop-build",
+  if (manifest.manifestSupportEnabled()) {
+    manifest.manifestCreate("${DOCKER_REGISTRY_BASENAME}:build-igor",
+      ["${DOCKER_REGISTRY_BASENAME}:build-igor-a",
+       "${DOCKER_REGISTRY_BASENAME}:build-igor-b",
+       "${DOCKER_REGISTRY_BASENAME}:build-igor-c"])
+    manifest.manifestAnnotate("${DOCKER_REGISTRY_BASENAME}:build-igor",
       [
-        [manifest: "${DOCKER_REGISTRY_BASENAME}:x86_64-develop-build",
+        [manifest: "${DOCKER_REGISTRY_BASENAME}:build-igor-a",
          arch: 'amd64', os: 'linux', osfeatures: [], variant: ''],
-        [manifest: "${DOCKER_REGISTRY_BASENAME}:armv7l-develop-build",
+        [manifest: "${DOCKER_REGISTRY_BASENAME}:build-igor-b",
          arch: 'arm', os: 'linux', osfeatures: [], variant: 'v7'],
-        [manifest: "${DOCKER_REGISTRY_BASENAME}:aarch64-develop-build",
+        [manifest: "${DOCKER_REGISTRY_BASENAME}:build-igor-c",
          arch: 'arm64', os: 'linux', osfeatures: [], variant: '']
       ])
     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'login', passwordVariable: 'password')]) {
-      manifest.manifestPush("${DOCKER_REGISTRY_BASENAME}:develop-build", login, password)
+      manifest.manifestPush("${DOCKER_REGISTRY_BASENAME}:build-igor", login, password)
     }
   }
   docker.image('postgres:9.5').withRun(""
@@ -67,7 +67,7 @@ def doDebugBuild(coverageEnabled=false) {
         ccache --show-stats
         ccache --zero-stats
         ccache --max-size=5G
-      """  
+      """
       sh """
         cmake \
           -DTESTING=ON \
