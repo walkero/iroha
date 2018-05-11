@@ -18,12 +18,12 @@
 #ifndef IROHA_SHARED_MODEL_PROPOSAL_HPP
 #define IROHA_SHARED_MODEL_PROPOSAL_HPP
 
-#include "interfaces/iroha_internal/parent_proposal.hpp"
+#include "interfaces/iroha_internal/abstract_proposal.hpp"
 
 namespace shared_model {
   namespace interface {
 
-    class Proposal : public ParentProposal{};
+    class Proposal : public AbstractProposal{};
 
   }  // namespace interface
 }  // namespace shared_model

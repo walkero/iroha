@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef IROHA_SHARED_MODEL_PARENT_BLOCK_HPP
-#define IROHA_SHARED_MODEL_PARENT_BLOCK_HPP
+#ifndef IROHA_SHARED_MODEL_ABSTRACT_BLOCK_HPP
+#define IROHA_SHARED_MODEL_ABSTRACT_BLOCK_HPP
 
 #include <memory>
 #include "common/byteutils.hpp"
@@ -23,9 +23,9 @@ namespace shared_model {
   namespace interface {
 
 #ifndef DISABLE_BACKWARD
-    class ParentBlock : public Signable<ParentBlock, iroha::model::Block> {
+    class AbstractBlock : public Signable<AbstractBlock, iroha::model::Block> {
 #else
-    class ParentBlock : public Signable<ParentBlock> {
+    class AbstractBlock : public Signable<AbstractBlock> {
 #endif
 
      public:
@@ -43,4 +43,4 @@ namespace shared_model {
   }  // namespace interface
 }  // namespace shared_model
 
-#endif  // IROHA_SHARED_MODEL_PARENT_BLOCK_HPP
+#endif  // IROHA_SHARED_MODEL_ABSTRACT_BLOCK_HPP

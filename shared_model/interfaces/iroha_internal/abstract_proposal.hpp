@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef IROHA_SHARED_MODEL_PARENT_PROPOSAL_HPP
-#define IROHA_SHARED_MODEL_PARENT_PROPOSAL_HPP
+#ifndef IROHA_SHARED_MODEL_ABSTRACT_PROPOSAL_HPP
+#define IROHA_SHARED_MODEL_ABSTRACT_PROPOSAL_HPP
 
 #include <boost/range/numeric.hpp>
 #include <vector>
@@ -20,8 +20,8 @@
 namespace shared_model {
   namespace interface {
 
-    class ParentProposal
-        : public Primitive<ParentProposal, iroha::model::Proposal> {
+    class AbstractProposal
+        : public Primitive<AbstractProposal, iroha::model::Proposal> {
      public:
       template <class T>
       using w = detail::PolymorphicWrapper<T>;
@@ -61,7 +61,7 @@ namespace shared_model {
       }
 #endif
 
-      bool operator==(const ParentProposal &rhs) const override {
+      bool operator==(const AbstractProposal &rhs) const override {
         return transactions() == rhs.transactions() and height() == rhs.height()
             and createdTime() == rhs.createdTime();
       }
@@ -81,4 +81,4 @@ namespace shared_model {
   }  // namespace interface
 }  // namespace shared_model
 
-#endif  // IROHA_SHARED_MODEL_PARENT_PROPOSAL_HPP
+#endif  // IROHA_SHARED_MODEL_ABSTRACT_PROPOSAL_HPP

@@ -6,12 +6,12 @@
 #ifndef IROHA_SHARED_MODEL_EMPTY_BLOCK_HPP
 #define IROHA_SHARED_MODEL_EMPTY_BLOCK_HPP
 
-#include "interfaces/iroha_internal/parent_block.hpp"
+#include "interfaces/iroha_internal/abstract_block.hpp"
 
 namespace shared_model {
   namespace interface {
 
-    class EmptyBlock : public ParentBlock {
+    class EmptyBlock : public AbstractBlock {
      public:
 #ifndef DISABLE_BACKWARD
       iroha::model::Block *makeOldModel() const override {

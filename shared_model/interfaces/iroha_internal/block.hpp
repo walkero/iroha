@@ -18,14 +18,14 @@
 #ifndef IROHA_SHARED_MODEL_BLOCK_HPP
 #define IROHA_SHARED_MODEL_BLOCK_HPP
 
-#include "interfaces/iroha_internal/parent_block.hpp"
+#include "interfaces/iroha_internal/abstract_block.hpp"
 #include "utils/string_builder.hpp"
 #include "interfaces/iroha_internal/empty_block.hpp"
 
 namespace shared_model {
   namespace interface {
 
-    class Block : public ParentBlock {
+    class Block : public AbstractBlock {
      public:
       /**
        * @return amount of transactions in block
