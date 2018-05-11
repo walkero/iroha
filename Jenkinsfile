@@ -473,6 +473,9 @@ pipeline {
         expression { return params.WinSM }
       }
       agent { label 'win' }
+      environment {
+        PATH = "C:\\Program Files\\Git\\usr\\bin;${env.PATH}"
+      }
       steps {
         script {
           def scmVars = checkout scm
