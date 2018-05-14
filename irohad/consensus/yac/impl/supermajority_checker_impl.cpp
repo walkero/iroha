@@ -18,6 +18,7 @@
 #include "consensus/yac/impl/supermajority_checker_impl.hpp"
 #include "interfaces/common_objects/peer.hpp"
 #include "interfaces/common_objects/signature.hpp"
+#include "validation/utils.hpp"
 
 namespace iroha {
   namespace consensus {
@@ -44,19 +45,11 @@ namespace iroha {
           const shared_model::interface::types::SignatureRangeType &signatures,
           const std::vector<std::shared_ptr<shared_model::interface::Peer>>
               &peers) const {
-        return std::all_of(
-            signatures.begin(),
-            signatures.end(),
-            [&peers](const auto &signature) {
-              return std::find_if(
-                         peers.begin(),
-                         peers.end(),
-                         [&signature](const std::shared_ptr<
-                                      shared_model::interface::Peer> &peer) {
-                           return signature.publicKey() == peer->pubkey();
-                         })
-                  != peers.end();
-            });
+        std::vector<shared_model::crypto::PublicKey> keys;
+        for (const auto &p : peers) {
+          keys.push_back(p->pubkey());
+        }
+        return validation::signaturesSubset(signatures, keys);
       }
 
       bool SupermajorityCheckerImpl::hasReject(uint64_t frequent,
