@@ -118,50 +118,43 @@ class HeavyTransactionTest : public ::testing::Test {
  * @then transaction have been passed
  */
 TEST_F(HeavyTransactionTest, DISABLED_ManyLargeTxes) {
-  IntegrationTestFramework itf;
-
-  itf.setInitialState(kAdminKeypair)
-      .sendTx(makeUserWithPerms())
-      .skipProposal()
-      .checkBlock([](auto &b) { ASSERT_EQ(b->transactions().size(), 1); });
-
   auto number_of_txes = 4u;
+  IntegrationTestFramework itf(number_of_txes + 1);
+
+  itf.setInitialState(kAdminKeypair).sendTx(makeUserWithPerms());
+
   for (auto i = 0u; i < number_of_txes; ++i) {
     itf.sendTx(complete(setAcountDetailTx("foo_" + std::to_string(i),
                                           generateData(2 * 1024 * 1024))));
   }
   itf.skipProposal()
-      .checkBlock(
-          [&](auto &b) { ASSERT_EQ(b->transactions().size(), number_of_txes); })
+      .checkBlock([&](auto &b) {
+        ASSERT_EQ(b->transactions().size(), number_of_txes + 1);
+      })
       .done();
 }
 
 /**
+ * TODO: enable the test when performance issues are solved
+ * IR-1264 14/05/2018 andrei
  * @given some user with all required permissions
  * @when send tx with many addAccountDetails with large data inside
  * @then transaction is passed
  */
-TEST_F(HeavyTransactionTest, VeryLargeTxWithManyCommands) {
+TEST_F(HeavyTransactionTest, DISABLED_VeryLargeTxWithManyCommands) {
   auto big_data = generateData(3 * 1024 * 1024);
   auto large_tx_builder = setAcountDetailTx("foo_1", big_data)
                               .setAccountDetail(kUserId, "foo_2", big_data)
                               .setAccountDetail(kUserId, "foo_3", big_data);
 
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(2)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
-      // in itf tx build from large_tx_build will pass in Torii but
-      // in production the transaction will be failed before
-      // stateless validation because of size.
       .sendTx(complete(large_tx_builder))
       .skipProposal()
       .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); });
-  // this sleep method is a temporary work-around
-  // because BlockLoaderImpl Failed to retrieve top block
-  // TODO: IR-1264 neewy 19/04/2018
-  std::this_thread::sleep_for(std::chrono::seconds(10));
-  itf.done();
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 2); })
+      .done();
 }
 
 /**
