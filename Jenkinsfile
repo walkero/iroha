@@ -477,10 +477,10 @@ pipeline {
         script {
           def scmVars = checkout scm
           sh """
-            # %comspec% /k "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Auxiliary\\Build\\vcvars32.bat";
             cmake -Hshared_model \
                   -Bbuild \
                   -DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Administrator\\Downloads\\vcpkg-master\\vcpkg-master\\scripts\\buildsystems\\vcpkg.cmake;
+                  -G "Visual Studio 15 2017 Win64" -T host=x64
             cmake --build build;
             cd build;
             ctest --output-on-failure -C debug;
