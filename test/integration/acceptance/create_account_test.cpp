@@ -63,6 +63,14 @@ class CreateAccount : public ::testing::Test {
     return builder.build().signAndAddSignature(kUserKeypair);
   }
 
+  const std::function<void(const shared_model::proto::TransactionResponse &)>
+      checkStatelessInvalid = [](auto &status) {
+        ASSERT_NO_THROW(
+            boost::get<shared_model::detail::PolymorphicWrapper<
+                shared_model::interface::StatelessFailedTxResponse>>(
+                status.get()));
+      };
+
   const std::string kUser = "user"s;
   const std::string kNewUser = "userone"s;
   const std::string kDomain = IntegrationTestFramework::kDefaultDomain;
@@ -81,7 +89,7 @@ class CreateAccount : public ::testing::Test {
  * @then there is the tx in proposal
  */
 TEST_F(CreateAccount, Basic) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -100,7 +108,7 @@ TEST_F(CreateAccount, Basic) {
  * @then there is no tx in proposal
  */
 TEST_F(CreateAccount, NoPermissions) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .skipProposal()
@@ -115,18 +123,18 @@ TEST_F(CreateAccount, NoPermissions) {
 
 /**
  * @given some user with can_create_account permission
- * @when execute tx with CreateAccount command with inexistent domain
+ * @when execute tx with CreateAccount command with nonexistent domain
  * @then there is no tx in proposal
  */
 TEST_F(CreateAccount, NoDomain) {
-  const std::string inexistent_domain = "asdf"s;
-  IntegrationTestFramework()
+  const std::string nonexistent_domain = "asdf"s;
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(completeTx(baseTx().createAccount(
-          kNewUser, inexistent_domain, kNewUserKeypair.publicKey())))
+          kNewUser, nonexistent_domain, kNewUserKeypair.publicKey())))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -138,15 +146,15 @@ TEST_F(CreateAccount, NoDomain) {
  * @when execute tx with CreateAccount command with already existing username
  * @then there is no tx in proposal
  */
-TEST_F(CreateAccount, ExistentName) {
-  const std::string &existent_name = kUser;
-  IntegrationTestFramework()
+TEST_F(CreateAccount, ExistingName) {
+  const std::string &existing_name = kUser;
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(completeTx(baseTx().createAccount(
-          existent_name, kDomain, kNewUserKeypair.publicKey())))
+          existing_name, kDomain, kNewUserKeypair.publicKey())))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -159,7 +167,7 @@ TEST_F(CreateAccount, ExistentName) {
  * @then there is the tx in proposal
  */
 TEST_F(CreateAccount, MaxLenName) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -179,14 +187,14 @@ TEST_F(CreateAccount, MaxLenName) {
  *       (aka skipProposal throws)
  */
 TEST_F(CreateAccount, TooLongName) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(completeTx(baseTx().createAccount(
-          std::string(33, 'a'), kDomain, kNewUserKeypair.publicKey())));
-  ASSERT_ANY_THROW(itf.skipProposal());
+                  std::string(33, 'a'), kDomain, kNewUserKeypair.publicKey())),
+              checkStatelessInvalid);
 }
 
 /**
@@ -197,12 +205,12 @@ TEST_F(CreateAccount, TooLongName) {
  */
 TEST_F(CreateAccount, EmptyName) {
   const std::string &empty_name = "";
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(completeTx(baseTx().createAccount(
-          empty_name, kDomain, kNewUserKeypair.publicKey())));
-  ASSERT_ANY_THROW(itf.skipProposal());
+                  empty_name, kDomain, kNewUserKeypair.publicKey())),
+              checkStatelessInvalid);
 }
