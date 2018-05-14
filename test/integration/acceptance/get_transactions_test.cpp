@@ -98,7 +98,7 @@ TEST_F(GetTransactions, HaveNoGetPerms) {
   };
 
   auto dummy_tx = dummyTx();
-  IntegrationTestFramework()
+  IntegrationTestFramework(2)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_read_assets}))
       .sendTx(dummy_tx)
@@ -124,7 +124,7 @@ TEST_F(GetTransactions, HaveGetAllTx) {
     ASSERT_EQ(*resp.value()->transactions()[0].operator->(), dummy_tx);
   };
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(2)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_all_txs}))
       .sendTx(dummy_tx)
@@ -150,7 +150,7 @@ TEST_F(GetTransactions, HaveGetMyTx) {
     ASSERT_EQ(*resp.value()->transactions()[0].operator->(), dummy_tx);
   };
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(2)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .sendTx(dummy_tx)
@@ -184,19 +184,20 @@ TEST_F(GetTransactions, InvalidSignatures) {
                    .signAndAddSignature(
                        crypto::DefaultCryptoAlgorithmType::generateKeypair());
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
+      .skipBlock()
       .sendQuery(query, check)
       .done();
 }
 
 /**
  * @given some user with only can_get_my_txs permission
- * @when query GetTransactions with inexistent hash
+ * @when query GetTransactions with nonexistent hash
  * @then TransactionsResponse with no transactions
  */
-TEST_F(GetTransactions, InexistentHash) {
+TEST_F(GetTransactions, NonexistentHash) {
   auto check = [](auto &status) {
     auto resp = boost::apply_visitor(
         interface::SpecifiedVisitor<interface::TransactionsResponse>(),
@@ -205,7 +206,7 @@ TEST_F(GetTransactions, InexistentHash) {
     ASSERT_EQ(resp.value()->transactions().size(), 0);
   };
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .checkBlock(
@@ -229,7 +230,7 @@ TEST_F(GetTransactions, OtherUserTx) {
   };
 
   auto tx = makeUserWithPerms({shared_model::permissions::can_get_my_txs});
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(tx)
       .checkBlock(
