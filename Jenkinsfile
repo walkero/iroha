@@ -1,9 +1,9 @@
 // Overall pipeline looks like the following
-//         
+//
 //   |--Linux-----|----Debug
-//   |            |----Release 
+//   |            |----Release
 //   |    OR
-//   |           
+//   |
 //-- |--Linux ARM-|----Debug
 //   |            |----Release
 //   |    OR
@@ -101,7 +101,7 @@ pipeline {
         stage('ARMv7') {
           when {
             beforeAgent true
-            expression { return params.ARMv7 } 
+            expression { return params.ARMv7 }
           }
           agent { label 'armv7' }
           steps {
@@ -110,7 +110,7 @@ pipeline {
               coverage = load ".jenkinsci/selected-branches-coverage.groovy"
               if (!params.Linux && !params.ARMv8 && !params.MacOS && (coverage.selectedBranchesCoverage(['develop', 'master']))) {
                 debugBuild.doDebugBuild(true)
-              }              
+              }
               else {
                 debugBuild.doDebugBuild()
               }
@@ -132,7 +132,7 @@ pipeline {
         stage('ARMv8') {
           when {
             beforeAgent true
-            expression { return params.ARMv8 } 
+            expression { return params.ARMv8 }
           }
           agent { label 'armv8' }
           steps {
@@ -245,7 +245,7 @@ pipeline {
                       def artifacts = load ".jenkinsci/artifacts.groovy"
                       def commit = env.GIT_COMMIT
                       filePaths = [ '\$(pwd)/build/*.tar.gz' ]
-                      artifacts.uploadArtifacts(filePaths, sprintf('/iroha/macos/%1$s-%2$s-%3$s', [GIT_LOCAL_BRANCH, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)]))                        
+                      artifacts.uploadArtifacts(filePaths, sprintf('/iroha/macos/%1$s-%2$s-%3$s', [GIT_LOCAL_BRANCH, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)]))
                     }
                   }
                   finally {
@@ -264,7 +264,7 @@ pipeline {
     }
     stage('Build Release') {
       when {
-        expression { params.BUILD_TYPE == 'Release' }      
+        expression { params.BUILD_TYPE == 'Release' }
       }
       parallel {
         stage('Linux') {
@@ -307,7 +307,7 @@ pipeline {
                 post.linuxPostStep()
               }
             }
-          }           
+          }
         }
         stage('ARMv8') {
           when {
@@ -328,7 +328,7 @@ pipeline {
                 post.linuxPostStep()
               }
             }
-          }          
+          }
         }
         stage('MacOS') {
           when {
@@ -434,7 +434,7 @@ pipeline {
             iC.inside("-v /tmp/${env.GIT_COMMIT}/entrypoint.sh:/entrypoint.sh:ro -v /tmp/${env.GIT_COMMIT}/bindings-artifact:/tmp/bindings-artifact") {
               bindings.doAndroidBindings(params.ABABIVersion)
             }
-          }          
+          }
         }
       }
       post {
@@ -481,7 +481,7 @@ pipeline {
                   -Bbuild \
                   -DCMAKE_TOOLCHAIN_FILE=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/scripts/buildsystems/vcpkg.cmake \
                   -G "Visual Studio 15 2017 Win64" -T host=x64;
-            cmake --build build -j${PARALLELISM};
+            cmake --build build;
             cd build;
             ctest --output-on-failure -C debug;
           """
@@ -489,8 +489,8 @@ pipeline {
       }
       post {
         cleanup {
-          sh 'echo cleanup'
-          //cleanWs()
+          //sh 'echo cleanup'
+          cleanWs()
         }
       }
     }
