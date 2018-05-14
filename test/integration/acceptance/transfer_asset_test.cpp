@@ -86,6 +86,14 @@ class TransferAsset : public ::testing::Test {
     return builder.build().signAndAddSignature(kUser1Keypair);
   }
 
+  const std::function<void(const shared_model::proto::TransactionResponse &)>
+      checkStatelessInvalid = [](auto &status) {
+        ASSERT_NO_THROW(
+            boost::get<shared_model::detail::PolymorphicWrapper<
+                shared_model::interface::StatelessFailedTxResponse>>(
+                status.get()));
+      };
+
   const std::string kAsset = IntegrationTestFramework::kAssetName + "#test";
   const std::string kAmount = "1.0"s;
   const std::string kDesc = "description"s;
@@ -113,18 +121,15 @@ class TransferAsset : public ::testing::Test {
  * @then there is the tx in proposal
  */
 TEST_F(TransferAsset, Basic) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(4)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
       .sendTx(addAssets(kUser1, kUser1Keypair))
-      .skipProposal()
-      .skipBlock()
       .sendTx(completeTx(
           baseTx().transferAsset(kUser1Id, kUser2Id, kAsset, kDesc, kAmount)))
-      .skipProposal()
       .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 4); })
       .done();
 }
 
@@ -134,13 +139,17 @@ TEST_F(TransferAsset, Basic) {
  * @then there is an empty proposal
  */
 TEST_F(TransferAsset, WithOnlyCanTransferPerm) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1,
                                 kUser1Keypair,
                                 {shared_model::permissions::can_transfer},
                                 kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
@@ -159,13 +168,17 @@ TEST_F(TransferAsset, WithOnlyCanTransferPerm) {
  * @then there is an empty proposal
  */
 TEST_F(TransferAsset, WithOnlyCanReceivePerm) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1,
                                 kUser1Keypair,
                                 {shared_model::permissions::can_receive},
                                 kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
@@ -180,19 +193,21 @@ TEST_F(TransferAsset, WithOnlyCanReceivePerm) {
 
 /**
  * @given some user with all required permissions
- * @when execute tx with TransferAsset command to inexistent destination
+ * @when execute tx with TransferAsset command to nonexistent destination
  * @then there is an empty proposal
  */
-TEST_F(TransferAsset, InexistentDest) {
-  const std::string &inexistent = "inexist@test"s;
-  IntegrationTestFramework()
+TEST_F(TransferAsset, NonexistentDest) {
+  const std::string &nonexistent = "inexist@test"s;
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
       .sendTx(baseTx()
-                  .transferAsset(kUser1Id, inexistent, kAsset, kDesc, kAmount)
+                  .transferAsset(kUser1Id, nonexistent, kAsset, kDesc, kAmount)
                   .build()
                   .signAndAddSignature(kUser1Keypair))
       .checkBlock(
@@ -202,22 +217,27 @@ TEST_F(TransferAsset, InexistentDest) {
 
 /**
  * @given pair of users with all required permissions
- * @when execute tx with TransferAsset command with inexistent asset
+ * @when execute tx with TransferAsset command with nonexistent asset
  * @then there is an empty proposal
  */
-TEST_F(TransferAsset, InexistentAsset) {
-  const std::string &inexistent = "inexist#test"s;
-  IntegrationTestFramework()
+TEST_F(TransferAsset, NonexistentAsset) {
+  const std::string &nonexistent = "inexist#test"s;
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
-      .sendTx(baseTx()
-                  .transferAsset(kUser1Id, kUser2Id, inexistent, kDesc, kAmount)
-                  .build()
-                  .signAndAddSignature(kUser1Keypair))
+      .sendTx(
+          baseTx()
+              .transferAsset(kUser1Id, kUser2Id, nonexistent, kDesc, kAmount)
+              .build()
+              .signAndAddSignature(kUser1Keypair))
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
       .done();
@@ -230,8 +250,8 @@ TEST_F(TransferAsset, InexistentAsset) {
  *       (aka skipProposal throws)
  */
 TEST_F(TransferAsset, NegativeAmount) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(3)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
       .sendTx(addAssets(kUser1, kUser1Keypair))
@@ -240,8 +260,8 @@ TEST_F(TransferAsset, NegativeAmount) {
       .sendTx(baseTx()
                   .transferAsset(kUser1Id, kUser2Id, kAsset, kDesc, "-1.0")
                   .build()
-                  .signAndAddSignature(kUser1Keypair));
-  ASSERT_ANY_THROW(itf.skipProposal());
+                  .signAndAddSignature(kUser1Keypair),
+              checkStatelessInvalid);
 }
 
 /**
@@ -251,8 +271,8 @@ TEST_F(TransferAsset, NegativeAmount) {
  *       (aka skipProposal throws)
  */
 TEST_F(TransferAsset, ZeroAmount) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(3)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
       .sendTx(addAssets(kUser1, kUser1Keypair))
@@ -261,8 +281,8 @@ TEST_F(TransferAsset, ZeroAmount) {
       .sendTx(baseTx()
                   .transferAsset(kUser1Id, kUser2Id, kAsset, kDesc, "0.0")
                   .build()
-                  .signAndAddSignature(kUser1Keypair));
-  ASSERT_ANY_THROW(itf.skipProposal());
+                  .signAndAddSignature(kUser1Keypair),
+              checkStatelessInvalid);
 }
 
 /**
@@ -271,18 +291,15 @@ TEST_F(TransferAsset, ZeroAmount) {
  * @then it passed to the proposal
  */
 TEST_F(TransferAsset, EmptyDesc) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(4)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
       .sendTx(addAssets(kUser1, kUser1Keypair))
-      .skipProposal()
-      .skipBlock()
       .sendTx(completeTx(
           baseTx().transferAsset(kUser1Id, kUser2Id, kAsset, "", kAmount)))
-      .skipProposal()
       .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 4); })
       .done();
 }
 
@@ -296,20 +313,14 @@ TEST_F(TransferAsset, LongDesc) {
   std::string long_desc(100000, 'a');
   auto invalid_tx = completeTx(
       baseTx().transferAsset(kUser1Id, kUser2Id, kAsset, long_desc, kAmount));
-  using ExpectedStatusType = shared_model::detail::PolymorphicWrapper<
-      shared_model::interface::StatelessFailedTxResponse>;
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(3)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
-      .sendTx(invalid_tx,
-              [](const shared_model::proto::TransactionResponse &status) {
-                // check if returned status is as expected
-                ASSERT_NO_THROW(boost::get<ExpectedStatusType>(status.get()));
-              })
+      .sendTx(invalid_tx, checkStatelessInvalid)
       .done();
 }
 
@@ -319,10 +330,14 @@ TEST_F(TransferAsset, LongDesc) {
  * @then there is an empty proposal
  */
 TEST_F(TransferAsset, MoreThanHas) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair, "50.0"))
       .skipProposal()
       .skipBlock()
@@ -346,21 +361,28 @@ TEST_F(TransferAsset, Uint256DestOverflow) {
   const std::string &uint256_halfmax =
       "723700557733226221397318656304299424082937404160253525246609900049457060"
       "2495.0";  // 2**252 - 1
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
+      .skipProposal()
+      .skipBlock()
       .sendTx(makeUserWithPerms(kUser2, kUser2Keypair, kPerms, kRole2))
+      .skipProposal()
+      .skipBlock()
       .sendTx(addAssets(kUser1, kUser1Keypair, uint256_halfmax))
       .skipProposal()
       .skipBlock()
       // Send first half of the maximum
       .sendTx(completeTx(baseTx().transferAsset(
           kUser1Id, kUser2Id, kAsset, kDesc, uint256_halfmax)))
+      .skipProposal()
+      .checkBlock(
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
       // Restore self balance
       .sendTx(addAssets(kUser1, kUser1Keypair, uint256_halfmax))
       .skipProposal()
       .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 2); })
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
       // Send second half of the maximum
       .sendTx(completeTx(baseTx().transferAsset(
           kUser1Id, kUser2Id, kAsset, kDesc, uint256_halfmax)))
@@ -378,15 +400,15 @@ TEST_F(TransferAsset, Uint256DestOverflow) {
  *       (aka skipProposal throws)
  */
 TEST_F(TransferAsset, SourceIsDest) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(2)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(addAssets(kUser1, kUser1Keypair))
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(
-          baseTx().transferAsset(kUser1Id, kUser1Id, kAsset, kDesc, kAmount)));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx().transferAsset(
+                  kUser1Id, kUser1Id, kAsset, kDesc, kAmount)),
+              checkStatelessInvalid);
 }
 
 /**
@@ -399,7 +421,7 @@ TEST_F(TransferAsset, InterDomain) {
   const auto kNewRole = "newrl";
   const auto kNewDomain = "newdom";
   const auto kUser2Id = kUser2 + "@" + kNewDomain;
-  IntegrationTestFramework()
+  IntegrationTestFramework(4)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms(kUser1, kUser1Keypair, kPerms, kRole1))
       .sendTx(
@@ -420,13 +442,9 @@ TEST_F(TransferAsset, InterDomain) {
               .build()
               .signAndAddSignature(kAdminKeypair))
       .sendTx(addAssets(kUser1, kUser1Keypair, kAmount))
-      .skipProposal()
-      .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 3); })
       .sendTx(completeTx(
           baseTx().transferAsset(kUser1Id, kUser2Id, kAsset, kDesc, kAmount)))
-      .skipProposal()
       .checkBlock(
-          [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 4); })
       .done();
 }
