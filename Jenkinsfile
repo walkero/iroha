@@ -136,8 +136,6 @@ pipeline {
                 def debugBuild = load ".jenkinsci/mac-debug-build.groovy"
                 def coverage = load ".jenkinsci/selected-branches-coverage.groovy"
                 try {
-                  println(debugBuild.inpect())
-                  println(coverage.inpect())
                   debugBuild.doDebugBuild( !params.Linux ? coverage.selectedBranchesCoverage() : false )
                 }
                 finally {
