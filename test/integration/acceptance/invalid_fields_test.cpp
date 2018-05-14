@@ -60,7 +60,7 @@ TEST_F(InvalidField, Signature) {
         resp.get()));
   };
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(proto::Transaction(tx), check)
       .done();
@@ -88,7 +88,7 @@ TEST_F(InvalidField, Pubkey) {
         resp.get()));
   };
 
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(proto::Transaction(tx), check)
       .done();
