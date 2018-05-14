@@ -476,9 +476,6 @@ pipeline {
       steps {
         script {
           def scmVars = checkout scm
-          bat """
-            %comspec% /k "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"
-          """
           sh """
             env;
             cmake -Hshared_model \
