@@ -476,14 +476,14 @@ pipeline {
       steps {
         script {
           def scmVars = checkout scm
+          bat "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat"
           sh """
+            env;
             cmake -Hshared_model \
                   -Bbuild \
                   -DCMAKE_TOOLCHAIN_FILE=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/scripts/buildsystems/vcpkg.cmake \
-                  -G "Visual Studio 15 2017 Win64" -T host=x64;
+                  -G "NMake Makefiles";
             cmake --build build;
-            cd build;
-            ctest --output-on-failure -C debug;
           """
         }
       }
