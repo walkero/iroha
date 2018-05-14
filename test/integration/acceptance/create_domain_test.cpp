@@ -63,6 +63,14 @@ class CreateDomain : public ::testing::Test {
     return builder.build().signAndAddSignature(kUserKeypair);
   }
 
+  const std::function<void(const shared_model::proto::TransactionResponse &)>
+      checkStatelessInvalid = [](auto &status) {
+        ASSERT_NO_THROW(
+            boost::get<shared_model::detail::PolymorphicWrapper<
+                shared_model::interface::StatelessFailedTxResponse>>(
+                status.get()));
+      };
+
   const std::string kRole = "role"s;
   const std::string kUser = "user"s;
   const std::string kNewDomain = "newdomain";
@@ -79,7 +87,7 @@ class CreateDomain : public ::testing::Test {
  * @then there is the tx in proposal
  */
 TEST_F(CreateDomain, Basic) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -97,7 +105,7 @@ TEST_F(CreateDomain, Basic) {
  * @then there is no tx in proposal
  */
 TEST_F(CreateDomain, NoPermissions) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .skipProposal()
@@ -111,17 +119,17 @@ TEST_F(CreateDomain, NoPermissions) {
 
 /**
  * @given some user with can_create_domain permission
- * @when execute tx with CreateDomain command with inexistent role
+ * @when execute tx with CreateDomain command with nonexistent role
  * @then there is no tx in proposal
  */
 TEST_F(CreateDomain, NoRole) {
-  const std::string inexistent_role = "asdf"s;
-  IntegrationTestFramework()
+  const std::string nonexistent_role = "asdf"s;
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, inexistent_role)))
+      .sendTx(completeTx(baseTx().createDomain(kNewDomain, nonexistent_role)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -133,9 +141,9 @@ TEST_F(CreateDomain, NoRole) {
  * @when execute tx with CreateDomain command with already existing domain
  * @then there is no tx in proposal
  */
-TEST_F(CreateDomain, ExistentName) {
+TEST_F(CreateDomain, ExistingName) {
   const std::string &existing_domain = IntegrationTestFramework::kDefaultDomain;
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -159,7 +167,7 @@ TEST_F(CreateDomain, MaxLenName) {
       "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad."
       "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad."
       "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad";
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -178,19 +186,13 @@ TEST_F(CreateDomain, MaxLenName) {
  *       (aka skipProposal throws)
  */
 TEST_F(CreateDomain, TooLongName) {
-  std::string tooLongDomain =
-      // 256 characters string
-      "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad."
-      "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad."
-      "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPad."
-      "maxLabelLengthIs63paddingPaddingPaddingPaddingPaddingPaddingPads";
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(std::string(257, 'a'), kRole)));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx().createDomain(std::string(257, 'a'), kRole)),
+              checkStatelessInvalid);
 }
 
 /**
@@ -201,13 +203,13 @@ TEST_F(CreateDomain, TooLongName) {
  */
 TEST_F(CreateDomain, EmptyName) {
   const std::string &empty_name = "";
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(empty_name, kRole)));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx().createDomain(empty_name, kRole)),
+              checkStatelessInvalid);
 }
 
 /**
@@ -218,11 +220,11 @@ TEST_F(CreateDomain, EmptyName) {
  */
 TEST_F(CreateDomain, DISABLED_EmptyRoleName) {
   const std::string &empty_name = "";
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, empty_name)));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx().createDomain(kNewDomain, empty_name)),
+              checkStatelessInvalid);
 }
