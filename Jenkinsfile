@@ -489,6 +489,7 @@ pipeline {
       }
       post {
         cleanup {
+          sh 'echo cleanup'
           //cleanWs()
         }
       }
