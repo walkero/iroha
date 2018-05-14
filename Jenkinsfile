@@ -487,6 +487,11 @@ pipeline {
           """
         }
       }
+      post {
+        cleanup {
+          cleanWs()
+        }
+      }
     }
   }
 }
