@@ -73,6 +73,14 @@ class CreateRole : public ::testing::Test {
     return builder.build().signAndAddSignature(kUserKeypair);
   }
 
+  const std::function<void(const shared_model::proto::TransactionResponse &)>
+      checkStatelessInvalid = [](auto &status) {
+        ASSERT_NO_THROW(
+            boost::get<shared_model::detail::PolymorphicWrapper<
+                shared_model::interface::StatelessFailedTxResponse>>(
+                status.get()));
+      };
+
   const std::string kRole = "role"s;
   const std::string kUser = "user"s;
   const std::string kNewRole = "rl"s;
@@ -89,7 +97,7 @@ class CreateRole : public ::testing::Test {
  * @then there is the tx in proposal
  */
 TEST_F(CreateRole, Basic) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -107,7 +115,7 @@ TEST_F(CreateRole, Basic) {
  * @then there is an empty verified proposal
  */
 TEST_F(CreateRole, HaveNoPerms) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .skipProposal()
@@ -125,14 +133,14 @@ TEST_F(CreateRole, HaveNoPerms) {
  *       (aka skipProposal throws)
  */
 TEST_F(CreateRole, EmptyRole) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(
-          completeTx(baseTx({shared_model::permissions::can_get_my_txs}, "")));
-  ASSERT_ANY_THROW(itf.skipProposal());
+          completeTx(baseTx({shared_model::permissions::can_get_my_txs}, "")),
+          checkStatelessInvalid);
 }
 
 /**
@@ -142,13 +150,12 @@ TEST_F(CreateRole, EmptyRole) {
  *       (aka skipProposal throws)
  */
 TEST_F(CreateRole, EmptyPerms) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx({})));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx({})), checkStatelessInvalid);
 }
 
 /**
@@ -158,14 +165,14 @@ TEST_F(CreateRole, EmptyPerms) {
  *       (aka skipProposal throws)
  */
 TEST_F(CreateRole, LongRoleName) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
       .sendTx(completeTx(baseTx({shared_model::permissions::can_get_my_txs},
-                                std::string(33, 'a'))));
-  ASSERT_ANY_THROW(itf.skipProposal());
+                                std::string(33, 'a'))),
+              checkStatelessInvalid);
 }
 
 /**
@@ -174,7 +181,7 @@ TEST_F(CreateRole, LongRoleName) {
  * @then the tx is comitted
  */
 TEST_F(CreateRole, MaxLenRoleName) {
-  IntegrationTestFramework()
+  IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
@@ -189,31 +196,30 @@ TEST_F(CreateRole, MaxLenRoleName) {
 
 /**
  * @given some user with can_create_role permission
- * @when execute tx with CreateRole command with inexistent permission name
+ * @when execute tx with CreateRole command with nonexistent permission name
  * @then the tx hasn't passed stateless validation
  *       (aka skipProposal throws)
  */
-TEST_F(CreateRole, DISABLED_InexistentPerm) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+TEST_F(CreateRole, DISABLED_NonexistentPerm) {
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx({"this_permission_doesnt_exist"})));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx({"this_permission_doesnt_exist"})),
+              checkStatelessInvalid);
 }
 
 /**
  * @given some user with can_create_role permission
- * @when execute tx with CreateRole command with existent role name
+ * @when execute tx with CreateRole command with existing role name
  * @then there is an empty verified proposal
  */
 TEST_F(CreateRole, DISABLED_ExistingRole) {
-  IntegrationTestFramework itf;
-  itf.setInitialState(kAdminKeypair)
+  IntegrationTestFramework(1)
+      .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx()));
-  ASSERT_ANY_THROW(itf.skipProposal());
+      .sendTx(completeTx(baseTx()), checkStatelessInvalid);
 }
