@@ -47,7 +47,7 @@ namespace iroha {
       auto signatories = wsv_query->getSignatories(qry.creatorAccountId());
       const auto &sig = qry.signatures();
 
-      return boost::range_detail::range_calculate_size(sig) == 1
+      return boost::size(sig) == 1
           && signatories | [&sig](const auto &signatories) {
                return validation::signaturesSubset(sig, signatories);
              };
