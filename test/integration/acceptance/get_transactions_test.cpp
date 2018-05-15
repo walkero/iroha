@@ -1,27 +1,14 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
- * http://soramitsu.co.jp
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <gtest/gtest.h>
 #include "backend/protobuf/transaction.hpp"
 #include "builders/protobuf/queries.hpp"
 #include "cryptography/crypto_provider/crypto_defaults.hpp"
-#include "datetime/time.hpp"
-#include "framework/base_tx.hpp"
 #include "framework/integration_framework/integration_test_framework.hpp"
+#include "integration/acceptance/acceptance_fixture.hpp"
 #include "interfaces/utils/specified_visitor.hpp"
 #include "utils/query_error_response_visitor.hpp"
 #include "validators/permissions.hpp"
@@ -30,20 +17,18 @@ using namespace std::string_literals;
 using namespace integration_framework;
 using namespace shared_model;
 
-class GetTransactions : public ::testing::Test {
+class GetTransactions : public AcceptanceFixture {
  public:
   /**
    * Creates the transaction with the user creation commands
    * @param perms are the permissions of the user
    * @return built tx and a hash of its payload
    */
-  auto makeUserWithPerms(const std::vector<std::string> &perms) {
+  auto makeUserWithPerms(const std::vector<std::string> &perms = {
+                             shared_model::permissions::can_get_my_txs}) {
     auto new_perms = perms;
     new_perms.push_back(shared_model::permissions::can_set_quorum);
-    return framework::createUserWithPerms(
-               kUser, kUserKeypair.publicKey(), kNewRole, new_perms)
-        .build()
-        .signAndAddSignature(kAdminKeypair);
+    return AcceptanceFixture::makeUserWithPerms(kNewRole, new_perms);
   }
 
   /**
@@ -52,12 +37,7 @@ class GetTransactions : public ::testing::Test {
    * Note: It should affect the ledger minimally
    */
   auto dummyTx() {
-    return shared_model::proto::TransactionBuilder()
-        .setAccountQuorum(kUserId, 1)
-        .creatorAccountId(kUserId)
-        .createdTime(iroha::time::now())
-        .build()
-        .signAndAddSignature(kUserKeypair);
+    return complete(AcceptanceFixture::baseTx().setAccountQuorum(kUserId, 1));
   }
 
   /**
@@ -66,22 +46,11 @@ class GetTransactions : public ::testing::Test {
    * @return built query
    */
   auto makeQuery(const crypto::Hash &hash) {
-    return proto::QueryBuilder()
-        .createdTime(iroha::time::now())
-        .creatorAccountId(kUserId)
-        .queryCounter(1)
-        .getTransactions(std::vector<crypto::Hash>{hash})
-        .build()
-        .signAndAddSignature(kUserKeypair);
+    return complete(baseQry().queryCounter(1).getTransactions(
+        std::vector<crypto::Hash>{hash}));
   }
 
-  const std::string kUser = "user"s;
   const std::string kNewRole = "rl"s;
-  const std::string kUserId = kUser + "@test";
-  const crypto::Keypair kAdminKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
-  const crypto::Keypair kUserKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
 };
 
 /**
@@ -152,7 +121,7 @@ TEST_F(GetTransactions, HaveGetMyTx) {
 
   IntegrationTestFramework(2)
       .setInitialState(kAdminKeypair)
-      .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
+      .sendTx(makeUserWithPerms())
       .sendTx(dummy_tx)
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 2); })
@@ -175,9 +144,7 @@ TEST_F(GetTransactions, InvalidSignatures) {
                         interface::StatefulFailedErrorResponse>>(resp->get()));
   };
 
-  auto query = proto::QueryBuilder()
-                   .createdTime(iroha::time::now())
-                   .creatorAccountId(kUserId)
+  auto query = baseQry()
                    .queryCounter(1)
                    .getTransactions(std::vector<crypto::Hash>{dummy_tx.hash()})
                    .build()
@@ -186,7 +153,7 @@ TEST_F(GetTransactions, InvalidSignatures) {
 
   IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
-      .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
+      .sendTx(makeUserWithPerms())
       .skipBlock()
       .sendQuery(query, check)
       .done();
@@ -208,7 +175,7 @@ TEST_F(GetTransactions, NonexistentHash) {
 
   IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
-      .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
+      .sendTx(makeUserWithPerms())
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
       .sendQuery(makeQuery(crypto::Hash(std::string(32, '0'))), check)
@@ -229,7 +196,7 @@ TEST_F(GetTransactions, OtherUserTx) {
     ASSERT_EQ(resp.value()->transactions().size(), 0);
   };
 
-  auto tx = makeUserWithPerms({shared_model::permissions::can_get_my_txs});
+  auto tx = makeUserWithPerms();
   IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(tx)

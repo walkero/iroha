@@ -1,40 +1,22 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
- * http://soramitsu.co.jp
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <gtest/gtest.h>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "builders/protobuf/queries.hpp"
-#include "builders/protobuf/transaction.hpp"
-#include "cryptography/crypto_provider/crypto_defaults.hpp"
-#include "datetime/time.hpp"
-#include "framework/base_tx.hpp"
 #include "framework/integration_framework/integration_test_framework.hpp"
+#include "integration/acceptance/acceptance_fixture.hpp"
 #include "interfaces/utils/specified_visitor.hpp"
-#include "module/shared_model/builders/protobuf/test_query_builder.hpp"
-#include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
 #include "validators/permissions.hpp"
 
 using namespace std::string_literals;
 using namespace integration_framework;
 using namespace shared_model;
 
-class HeavyTransactionTest : public ::testing::Test {
+class HeavyTransactionTest : public AcceptanceFixture {
  public:
   /**
    * Creates the transaction with the user creation commands
@@ -45,20 +27,7 @@ class HeavyTransactionTest : public ::testing::Test {
       const std::vector<std::string> &perms = {
           shared_model::permissions::role_perm_group.begin(),
           shared_model::permissions::role_perm_group.end()}) {
-    return framework::createUserWithPerms(
-               kUser, kUserKeypair.publicKey(), "role"s, perms)
-        .build()
-        .signAndAddSignature(kAdminKeypair);
-  }
-
-  /**
-   * Create valid base pre-built transaction
-   * @return pre-built tx
-   */
-  auto baseTx() {
-    return TestUnsignedTransactionBuilder()
-        .creatorAccountId(kUserId)
-        .createdTime(iroha::time::now());
+    return AcceptanceFixture::makeUserWithPerms(perms);
   }
 
   /**
@@ -81,33 +50,12 @@ class HeavyTransactionTest : public ::testing::Test {
   }
 
   /**
-   * Sign pre-built object
-   * @param builder is a pre-built signable object
-   * @return completed object
-   */
-  template <typename Builder>
-  auto complete(Builder builder) {
-    return builder.build().signAndAddSignature(kUserKeypair);
-  }
-
-  /**
    * Create valid basis of pre-built query
    * @return query stub with counter, creator and time
    */
   auto baseQuery() {
-    return TestUnsignedQueryBuilder()
-        .queryCounter(1)
-        .creatorAccountId(kUserId)
-        .createdTime(iroha::time::now());
+    return baseQry().queryCounter(1);
   }
-
-  const std::string kUser = "user"s;
-  const std::string kUserId =
-      kUser + "@"s + IntegrationTestFramework::kDefaultDomain;
-  const crypto::Keypair kUserKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
-  const crypto::Keypair kAdminKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
 };
 
 /**

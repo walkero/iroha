@@ -1,31 +1,15 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
- * http://soramitsu.co.jp
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <gtest/gtest.h>
-#include <type_traits>
+#include "acceptance_fixture.hpp"
 #include "backend/protobuf/transaction.hpp"
 #include "builders/protobuf/queries.hpp"
 #include "builders/protobuf/transaction.hpp"
 #include "cryptography/crypto_provider/crypto_defaults.hpp"
-#include "datetime/time.hpp"
-#include "framework/base_tx.hpp"
 #include "framework/integration_framework/integration_test_framework.hpp"
-#include "interfaces/utils/specified_visitor.hpp"
-#include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
 #include "utils/query_error_response_visitor.hpp"
 #include "validators/permissions.hpp"
 
@@ -33,7 +17,7 @@ using namespace std::string_literals;
 using namespace integration_framework;
 using namespace shared_model;
 
-class TransferAsset : public ::testing::Test {
+class TransferAsset : public AcceptanceFixture {
  public:
   /**
    * Creates the transaction with the user creation commands
@@ -44,7 +28,7 @@ class TransferAsset : public ::testing::Test {
                          const crypto::Keypair &key,
                          const std::vector<std::string> &perms,
                          const std::string &role) {
-    return framework::createUserWithPerms(user, key.publicKey(), role, perms)
+    return createUserWithPerms(user, key.publicKey(), role, perms)
         .build()
         .signAndAddSignature(kAdminKeypair);
   }
@@ -86,15 +70,6 @@ class TransferAsset : public ::testing::Test {
     return builder.build().signAndAddSignature(kUser1Keypair);
   }
 
-  const std::function<void(const shared_model::proto::TransactionResponse &)>
-      checkStatelessInvalid = [](auto &status) {
-        ASSERT_NO_THROW(
-            boost::get<shared_model::detail::PolymorphicWrapper<
-                shared_model::interface::StatelessFailedTxResponse>>(
-                status.get()));
-      };
-
-  const std::string kAsset = IntegrationTestFramework::kAssetName + "#test";
   const std::string kAmount = "1.0"s;
   const std::string kDesc = "description"s;
   const std::string kUser1 = "userone"s;
@@ -103,8 +78,6 @@ class TransferAsset : public ::testing::Test {
   const std::string kRole2 = "roletwo"s;
   const std::string kUser1Id = kUser1 + "@test";
   const std::string kUser2Id = kUser2 + "@test";
-  const crypto::Keypair kAdminKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
   const crypto::Keypair kUser1Keypair =
       crypto::DefaultCryptoAlgorithmType::generateKeypair();
   const crypto::Keypair kUser2Keypair =

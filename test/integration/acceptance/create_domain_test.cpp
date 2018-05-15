@@ -1,84 +1,25 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2018 All Rights Reserved.
- * http://soramitsu.co.jp
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include <gtest/gtest.h>
-#include "backend/protobuf/transaction.hpp"
-#include "cryptography/crypto_provider/crypto_defaults.hpp"
-#include "datetime/time.hpp"
-#include "framework/base_tx.hpp"
 #include "framework/integration_framework/integration_test_framework.hpp"
-#include "module/shared_model/builders/protobuf/test_transaction_builder.hpp"
+#include "integration/acceptance/acceptance_fixture.hpp"
 #include "validators/permissions.hpp"
 
 using namespace std::string_literals;
 using namespace integration_framework;
 using namespace shared_model;
 
-class CreateDomain : public ::testing::Test {
+class CreateDomain : public AcceptanceFixture {
  public:
-  /**
-   * Creates the transaction with the user creation commands
-   * @param perms are the permissions of the user
-   * @return built tx
-   */
   auto makeUserWithPerms(const std::vector<std::string> &perms = {
                              shared_model::permissions::can_create_domain}) {
-    return framework::createUserWithPerms(
-               kUser, kUserKeypair.publicKey(), kRole, perms)
-        .build()
-        .signAndAddSignature(kAdminKeypair);
+    return AcceptanceFixture::makeUserWithPerms(perms);
   }
 
-  /**
-   * Create valid base pre-built transaction
-   * @return pre-built tx
-   */
-  auto baseTx() {
-    return TestUnsignedTransactionBuilder()
-        .creatorAccountId(kUserId)
-        .createdTime(iroha::time::now());
-  }
-
-  /**
-   * Completes pre-built transaction
-   * @param builder is a pre-built tx
-   * @return built tx
-   */
-  template <typename TestTransactionBuilder>
-  auto completeTx(TestTransactionBuilder builder) {
-    return builder.build().signAndAddSignature(kUserKeypair);
-  }
-
-  const std::function<void(const shared_model::proto::TransactionResponse &)>
-      checkStatelessInvalid = [](auto &status) {
-        ASSERT_NO_THROW(
-            boost::get<shared_model::detail::PolymorphicWrapper<
-                shared_model::interface::StatelessFailedTxResponse>>(
-                status.get()));
-      };
-
-  const std::string kRole = "role"s;
-  const std::string kUser = "user"s;
   const std::string kNewDomain = "newdomain";
-  const std::string kUserId = kUser + "@test";
-  const crypto::Keypair kAdminKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
-  const crypto::Keypair kUserKeypair =
-      crypto::DefaultCryptoAlgorithmType::generateKeypair();
 };
 
 /**
@@ -92,7 +33,7 @@ TEST_F(CreateDomain, Basic) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, kRole)))
+      .sendTx(complete(baseTx().createDomain(kNewDomain, kRole)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
@@ -110,7 +51,7 @@ TEST_F(CreateDomain, NoPermissions) {
       .sendTx(makeUserWithPerms({shared_model::permissions::can_get_my_txs}))
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, kRole)))
+      .sendTx(complete(baseTx().createDomain(kNewDomain, kRole)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -129,7 +70,7 @@ TEST_F(CreateDomain, NoRole) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, nonexistent_role)))
+      .sendTx(complete(baseTx().createDomain(kNewDomain, nonexistent_role)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -148,7 +89,7 @@ TEST_F(CreateDomain, ExistingName) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(existing_domain, kRole)))
+      .sendTx(complete(baseTx().createDomain(existing_domain, kRole)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); })
@@ -172,7 +113,7 @@ TEST_F(CreateDomain, MaxLenName) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(maxLongDomain, kRole)))
+      .sendTx(complete(baseTx().createDomain(maxLongDomain, kRole)))
       .skipProposal()
       .checkBlock(
           [](auto &block) { ASSERT_EQ(block->transactions().size(), 1); })
@@ -191,7 +132,7 @@ TEST_F(CreateDomain, TooLongName) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(std::string(257, 'a'), kRole)),
+      .sendTx(complete(baseTx().createDomain(std::string(257, 'a'), kRole)),
               checkStatelessInvalid);
 }
 
@@ -208,7 +149,7 @@ TEST_F(CreateDomain, EmptyName) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(empty_name, kRole)),
+      .sendTx(complete(baseTx().createDomain(empty_name, kRole)),
               checkStatelessInvalid);
 }
 
@@ -225,6 +166,6 @@ TEST_F(CreateDomain, DISABLED_EmptyRoleName) {
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(completeTx(baseTx().createDomain(kNewDomain, empty_name)),
+      .sendTx(complete(baseTx().createDomain(kNewDomain, empty_name)),
               checkStatelessInvalid);
 }
