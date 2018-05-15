@@ -66,6 +66,32 @@ def doPythonBindings(buildType=Release) {
   return artifactsPath
 }
 
+def doPythonBindingsWin(buildType=Release) {
+  def currentPath = sh(script: "pwd", returnStdout: true).trim()
+  def commit = env.GIT_COMMIT
+  def supportPython2 = "OFF"
+  def artifactsPath = sprintf('%1$s/python-bindings-%2$s-%3$s-%4$s-%5$s.zip',
+    [currentPath, env.PBVersion, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
+  if (env.PBVersion == "python2") { supportPython2 = "ON" }
+  sh """
+    cmake \
+      -Hshared_model \
+      -Bbuild \
+      -DCMAKE_BUILD_TYPE=$buildType \
+      -DSWIG_PYTHON=ON \
+      -DCMAKE_TOOLCHAIN_FILE=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/scripts/buildsystems/vcpkg.cmake \
+      -G "NMake Makefiles" \
+      -DSUPPORT_PYTHON2=$supportPython2
+  """
+  sh "cmake --build build --target python_tests"
+  sh "cd build; make -j${params.PARALLELISM} irohapy"
+  sh "protoc --proto_path=schema --python_out=build/shared_model/bindings block.proto primitive.proto commands.proto queries.proto responses.proto endpoint.proto"
+  sh "${env.PBVersion} -m grpc_tools.protoc --proto_path=schema --python_out=build/shared_model/bindings --grpc_python_out=build/shared_model/bindings endpoint.proto yac.proto ordering.proto loader.proto"
+  sh "zip -j $artifactsPath build/shared_model/bindings/*.py build/shared_model/bindings/*.so"
+  sh "cp $artifactsPath /tmp/bindings-artifact"
+  return artifactsPath
+}
+
 def doAndroidBindings(abiVersion) {
   def currentPath = sh(script: "pwd", returnStdout: true).trim()
   def commit = env.GIT_COMMIT

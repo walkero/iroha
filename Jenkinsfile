@@ -18,9 +18,9 @@ properties([parameters([
   booleanParam(defaultValue: false, description: '', name: 'MacOS'),
   booleanParam(defaultValue: true, description: '', name: 'WinSM'),
   booleanParam(defaultValue: false, description: 'Whether build docs or not', name: 'Doxygen'),
-  booleanParam(defaultValue: true, description: 'Whether build Java bindings', name: 'JavaBindings'),
+  booleanParam(defaultValue: false, description: 'Whether build Java bindings', name: 'JavaBindings'),
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
-  booleanParam(defaultValue: false, description: 'Whether build Python bindings', name: 'PythonBindings'),
+  booleanParam(defaultValue: true, description: 'Whether build Python bindings', name: 'PythonBindings'),
   choice(choices: 'Release\nDebug', description: 'Python Bindings Build Type', name: 'PBBuildType'),
   choice(choices: 'python3\npython2', description: 'Python Bindings Version', name: 'PBVersion'),
   booleanParam(defaultValue: false, description: 'Whether build Android bindings', name: 'AndroidBindings'),
@@ -389,7 +389,7 @@ pipeline {
       when {
         beforeAgent true
         anyOf {
-          expression { return params.PythonBindings }
+          //expression { return params.PythonBindings }
           //expression { return params.JavaBindings }
           expression { return params.AndroidBindings }
         }
@@ -477,7 +477,8 @@ pipeline {
       steps {
         script {
           def bindings = load ".jenkinsci/bindings.groovy"
-          bindings.doJavaBindingsWin(params.JBBuildType)
+          //bindings.doJavaBindingsWin(params.JBBuildType)
+          bindings.doPythonBindingsWin(params.PBBuildType)
         }
       }
       post {
@@ -492,8 +493,9 @@ pipeline {
             def artifacts = load ".jenkinsci/artifacts.groovy"
             def commit = env.GIT_COMMIT
             if (params.JavaBindings) {
-              javaBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/java-bindings-*.zip' ]
-              artifacts.uploadArtifacts(javaBindingsFilePaths, '/iroha/bindings/java')
+              //javaBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/java-bindings-*.zip' ]
+              pythonBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/python-bindings-*.zip' ]
+              artifacts.uploadArtifacts(pythonBindingsFilePaths, '/iroha/bindings/python')
             }
           }
         }
