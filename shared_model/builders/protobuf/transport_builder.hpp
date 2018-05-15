@@ -18,8 +18,12 @@
 #ifndef IROHA_TRANSPORT_BUILDER_HPP
 #define IROHA_TRANSPORT_BUILDER_HPP
 
+#include "backend/protobuf/block.hpp"
+#include "backend/protobuf/empty_block.hpp"
 #include "common/result.hpp"
+#include "interfaces/common_objects/types.hpp"
 #include "utils/polymorphic_wrapper.hpp"
+#include "validators/default_validator.hpp"
 
 namespace shared_model {
   namespace proto {
@@ -48,6 +52,38 @@ namespace shared_model {
           return iroha::expected::makeError(answer.reason());
         }
         return iroha::expected::makeValue(T(std::move(transport)));
+      }
+
+     private:
+      SV stateless_validator_;
+    };
+
+    template <typename SV>
+    class TransportBuilder<interface::BlockVariantType, SV> {
+     public:
+      TransportBuilder<interface::BlockVariantType, SV>(
+          SV stateless_validator = SV())
+          : stateless_validator_(stateless_validator) {}
+
+      iroha::expected::Result<interface::BlockVariantType, std::string> build(
+          iroha::protocol::Block transport) {
+        if (transport.payload().transactions().size() == 0) {
+          auto result = shared_model::proto::EmptyBlock(transport);
+          auto answer = stateless_validator_.validate(result);
+          if (answer.hasErrors()) {
+            return iroha::expected::makeError(answer.reason());
+          }
+          return iroha::expected::makeValue(
+              std::make_shared<proto::EmptyBlock>(std::move(transport)));
+        } else {
+          auto result = shared_model::proto::Block(transport);
+          auto answer = stateless_validator_.validate(result);
+          if (answer.hasErrors()) {
+            return iroha::expected::makeError(answer.reason());
+          }
+          return iroha::expected::makeValue(
+              std::make_shared<proto::Block>(std::move(transport)));
+        }
       }
 
      private:

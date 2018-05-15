@@ -22,7 +22,7 @@ namespace shared_model {
   namespace proto {
     class EmptyBlock final : public CopyableProto<interface::EmptyBlock,
                                              iroha::protocol::Block,
-                                             Block> {
+                                             EmptyBlock> {
       template <class T>
       using w = detail::PolymorphicWrapper<T>;
 

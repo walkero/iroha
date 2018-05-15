@@ -20,7 +20,6 @@
 
 #include "interfaces/iroha_internal/abstract_block.hpp"
 #include "utils/string_builder.hpp"
-#include "interfaces/iroha_internal/empty_block.hpp"
 
 namespace shared_model {
   namespace interface {

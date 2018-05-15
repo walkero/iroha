@@ -35,12 +35,6 @@ namespace shared_model {
               FieldValidator,
               NonEmptyTransactionsValidator<TransactionValidator>> {
      public:
-      ProposalValidator()
-          : ContainerValidator<
-                interface::Proposal,
-                FieldValidator,
-                NonEmptyTransactionsValidator<TransactionValidator>>() {}
-
       /**
        * Applies validation on block
        * @param block

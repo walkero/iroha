@@ -20,11 +20,6 @@ namespace shared_model {
               FieldValidator,
               TransactionsValidator<TransactionValidator>> {
      public:
-      VerifiedProposalValidator()
-          : ContainerValidator<interface::VerifiedProposal,
-                               FieldValidator,
-                               TransactionsValidator<TransactionValidator>>() {}
-
       /**
        * Applies validation on block
        * @param block
