@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <boost/range/any_range.hpp>
 #include <string>
 #include <vector>
 #include "cryptography/public_key.hpp"
@@ -19,7 +20,8 @@ namespace iroha {
      */
     inline bool signaturesSubset(
         const shared_model::interface::types::SignatureRangeType &signatures,
-        const boost::any_range<shared_model::crypto::PublicKey, boost::forward_traversal_tag> &public_keys) {
+        const boost::any_range<shared_model::crypto::PublicKey,
+                               boost::forward_traversal_tag> &public_keys) {
       return std::all_of(
           signatures.begin(),
           signatures.end(),
