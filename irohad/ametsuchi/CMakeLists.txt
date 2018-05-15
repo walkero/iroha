@@ -1,3 +1,6 @@
+add_library(pqxxexec
+    impl/pqxxexecute.cpp)
+
 add_library(ametsuchi
     impl/flat_file/flat_file.cpp
     impl/storage_impl.cpp
@@ -22,4 +25,5 @@ target_link_libraries(ametsuchi
     shared_model_interfaces
     shared_model_proto_backend
     shared_model_stateless_validation
+    pqxxexec
     )

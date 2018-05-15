@@ -26,6 +26,8 @@
 #include "common/result.hpp"
 #include "logger/logger.hpp"
 
+pqxx::result execute(pqxx::nontransaction &transaction, const std::string &statement);
+
 namespace iroha {
   namespace ametsuchi {
 
@@ -40,7 +42,8 @@ namespace iroha {
       return [&](const std::string &statement) noexcept
           ->expected::Result<pqxx::result, std::string> {
         try {
-          return expected::makeValue(transaction.exec(statement));
+          auto val = execute(transaction, statement);
+          return expected::makeValue(val);
         } catch (const std::exception &e) {
           return expected::makeError(e.what());
         }
