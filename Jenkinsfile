@@ -482,15 +482,19 @@ pipeline {
       }
       post {
         cleanup {
-          sh 'echo cleanup'
-          // cleanWs()
+          script {
+            sh 'echo cleanup'
+            // cleanWs()
+          }
         }
         success {
-          def artifacts = load ".jenkinsci/artifacts.groovy"
-          def commit = env.GIT_COMMIT
-          if (params.JavaBindings) {
-            javaBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/java-bindings-*.zip' ]
-            artifacts.uploadArtifacts(javaBindingsFilePaths, '/iroha/bindings/java')
+          script {
+            def artifacts = load ".jenkinsci/artifacts.groovy"
+            def commit = env.GIT_COMMIT
+            if (params.JavaBindings) {
+              javaBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/java-bindings-*.zip' ]
+              artifacts.uploadArtifacts(javaBindingsFilePaths, '/iroha/bindings/java')
+            }
           }
         }
       }
