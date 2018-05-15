@@ -140,6 +140,8 @@ TEST_F(CreateRole, MaxLenRoleName) {
 }
 
 /**
+ * TODO 15/05/2018 andrei: IR-1267 fix builders setting default value for
+ * nonexisting permissions
  * @given some user with can_create_role permission
  * @when execute tx with CreateRole command with nonexistent permission name
  * @then the tx hasn't passed stateless validation
@@ -160,11 +162,15 @@ TEST_F(CreateRole, DISABLED_NonexistentPerm) {
  * @when execute tx with CreateRole command with existing role name
  * @then there is an empty verified proposal
  */
-TEST_F(CreateRole, DISABLED_ExistingRole) {
+TEST_F(CreateRole, ExistingRole) {
   IntegrationTestFramework(1)
       .setInitialState(kAdminKeypair)
       .sendTx(makeUserWithPerms())
       .skipProposal()
       .skipBlock()
-      .sendTx(complete(baseTx()), checkStatelessInvalid);
+      .sendTx(complete(
+          baseTx({shared_model::permissions::can_get_my_txs}, kNewRole)))
+      .skipProposal()
+      .checkBlock(
+          [](auto &block) { ASSERT_EQ(block->transactions().size(), 0); });
 }

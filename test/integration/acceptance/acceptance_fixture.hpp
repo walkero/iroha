@@ -17,9 +17,13 @@
 namespace shared_model {
   namespace proto {
     class TransactionResponse;
-  }
+  }  // namespace proto
 }  // namespace shared_model
 
+/**
+ * Common values (user, domain, asset)
+ * and methods (create user, base transaction) for acceptance tests
+ */
 class AcceptanceFixture : public ::testing::Test {
  public:
   AcceptanceFixture();
@@ -64,6 +68,12 @@ class AcceptanceFixture : public ::testing::Test {
   shared_model::proto::Transaction makeUserWithPerms(
       const std::vector<std::string> &perms);
 
+  /**
+   * Add default user creator account id and current created time to builder
+   * @tparam Builder type (transaction, query)
+   * @param builder object to modify
+   * @return builder containing creator account id and created time
+   */
   template <typename Builder>
   auto base(Builder builder) -> decltype(
       builder.creatorAccountId(std::string()).createdTime(uint64_t()));
@@ -74,6 +84,10 @@ class AcceptanceFixture : public ::testing::Test {
    */
   auto baseTx() -> decltype(base(TestUnsignedTransactionBuilder()));
 
+  /**
+   * Create valid base pre-built query
+   * @return pre-built query
+   */
   auto baseQry() -> decltype(base(TestUnsignedQueryBuilder()));
 
   /**
