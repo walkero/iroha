@@ -9,20 +9,20 @@
 #include "interfaces/iroha_internal/empty_block.hpp"
 
 #include <boost/range/numeric.hpp>
+
 #include "backend/protobuf/common_objects/signature.hpp"
 #include "backend/protobuf/transaction.hpp"
 #include "backend/protobuf/util.hpp"
+#include "block.pb.h"
 #include "common_objects/trivial_proto.hpp"
 #include "interfaces/common_objects/types.hpp"
-
-#include "block.pb.h"
 #include "utils/lazy_initializer.hpp"
 
 namespace shared_model {
   namespace proto {
     class EmptyBlock final : public CopyableProto<interface::EmptyBlock,
-                                             iroha::protocol::Block,
-                                             EmptyBlock> {
+                                                  iroha::protocol::Block,
+                                                  EmptyBlock> {
       template <class T>
       using w = detail::PolymorphicWrapper<T>;
 
@@ -83,7 +83,6 @@ namespace shared_model {
       }
 
      private:
-      // lazy
       template <typename T>
       using Lazy = detail::LazyInitializer<T>;
 
