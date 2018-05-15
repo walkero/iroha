@@ -36,7 +36,9 @@ TEST(BlockBuilderTest, BlockWithTransactions) {
  * @when Block with no transactions is built using given BlockBuilder
  * @then exception is thrown
  */
-TEST(BlockBuilderTest, BlockWithNoTransactions) {
+// TODO IR-1295 10.05.18 Remove disabled when 1295 is
+// implemented
+TEST(BlockBuilderTest, DISABLED_BlockWithNoTransactions) {
   ASSERT_ANY_THROW(
       BlockBuilder()
           .createdTime(iroha::time::now())
