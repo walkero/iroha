@@ -86,7 +86,7 @@ def doPythonBindingsWin(buildType=Release) {
   sh "cmake --build build --target irohapy"
   sh "protoc --proto_path=schema --proto_path=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/buildtrees/protobuf/src/protobuf-3.5.1-win32/include --python_out=build/bindings block.proto primitive.proto commands.proto queries.proto responses.proto endpoint.proto"
   sh "${env.PBVersion} -m grpc_tools.protoc --proto_path=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/buildtrees/protobuf/src/protobuf-3.5.1-win32/include --proto_path=schema --python_out=build/bindings --grpc_python_out=build/bindings endpoint.proto yac.proto ordering.proto loader.proto"
-  sh "zip -j $artifactsPath build/bindings/*.py build/bindings/*.so"
+  sh "zip -j $artifactsPath build/bindings/*.py build/bindings/*.dll"
   sh "cp $artifactsPath /tmp/bindings-artifact"
   return artifactsPath
 }
