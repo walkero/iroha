@@ -46,7 +46,7 @@ TestUnsignedTransactionBuilder AcceptanceFixture::createUser(
 TestUnsignedTransactionBuilder AcceptanceFixture::createUserWithPerms(
     const std::string &user,
     const shared_model::crypto::PublicKey &key,
-    const std::string role_id,
+    const std::string &role_id,
     std::vector<std::string> perms) {
   const auto user_id = user + "@"
       + integration_framework::IntegrationTestFramework::kDefaultDomain;

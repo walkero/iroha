@@ -44,7 +44,7 @@ class AcceptanceFixture : public ::testing::Test {
   TestUnsignedTransactionBuilder createUserWithPerms(
       const std::string &user,
       const shared_model::crypto::PublicKey &key,
-      const std::string role_id,
+      const std::string &role_id,
       std::vector<std::string> perms);
 
   /**
