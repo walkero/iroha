@@ -493,7 +493,7 @@ pipeline {
             def artifacts = load ".jenkinsci/artifacts.groovy"
             def commit = env.GIT_COMMIT
             if (params.PythonBindings) {
-              pythonBindingsFilePaths = [ '/с/artifact/python-bindings-*.zip' ]
+              pythonBindingsFilePaths = [ '/c/artifact/python-bindings-*.zip' ]
               artifacts.uploadArtifacts(pythonBindingsFilePaths, '/iroha/bindings/python')
             }
           }
