@@ -3,7 +3,7 @@
 def doJavaBindings(buildType=Release) {
   def currentPath = sh(script: "pwd", returnStdout: true).trim()
   def commit = env.GIT_COMMIT
-  def artifactsPath = sprintf('%1$s/java-bindings-%2$s-%3$s-%4$s.zip', 
+  def artifactsPath = sprintf('%1$s/java-bindings-%2$s-%3$s-%4$s.zip',
     [currentPath, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
   sh """
     cmake \
@@ -12,9 +12,29 @@ def doJavaBindings(buildType=Release) {
       -DCMAKE_BUILD_TYPE=$buildType \
       -DSWIG_JAVA=ON
   """
+  // cmake --build build --target irohajava -- -j4
   sh "cd build; make -j${params.PARALLELISM} irohajava"
   sh "zip -j $artifactsPath build/shared_model/bindings/*.java build/shared_model/bindings/libirohajava.so"
   sh "cp $artifactsPath /tmp/bindings-artifact"
+  return artifactsPath
+}
+
+def doJavaBindingsWin(buildType=Release) {
+  def currentPath = sh(script: "pwd", returnStdout: true).trim()
+  def commit = env.GIT_COMMIT
+  def artifactsPath = sprintf('%1$s/java-bindings-%2$s-%3$s-%4$s.zip',
+    [currentPath, buildType, sh(script: 'date "+%Y%m%d"', returnStdout: true).trim(), commit.substring(0,6)])
+  sh """
+    cmake \
+      -Hshared_model \
+      -Bbuild \
+      -DCMAKE_BUILD_TYPE=$buildType \
+      -DCMAKE_TOOLCHAIN_FILE=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/scripts/buildsystems/vcpkg.cmake \
+      -G "NMake Makefiles" \
+      -DSWIG_JAVA=ON
+  """
+  sh "cmake --build build --target irohajava"
+  sh "zip -j $artifactsPath build/shared_model/bindings/*.java build/shared_model/bindings/libirohajava.so"
   return artifactsPath
 }
 
@@ -27,6 +47,7 @@ def doPythonBindings(buildType=Release) {
   // do not use preinstalled libed25519
   sh "rm -rf /usr/local/include/ed25519*; unlink /usr/local/lib/libed25519.so; rm -f /usr/local/lib/libed25519.so.1.2.2"
   if (env.PBVersion == "python2") { supportPython2 = "ON" }
+  // -Hshared_model
   sh """
     cmake \
       -H. \
@@ -35,6 +56,7 @@ def doPythonBindings(buildType=Release) {
       -DSWIG_PYTHON=ON \
       -DSUPPORT_PYTHON2=$supportPython2
   """
+  // mklink python2.exe python27.exe
   sh "cmake --build build --target python_tests"
   sh "cd build; make -j${params.PARALLELISM} irohapy"
   sh "protoc --proto_path=schema --python_out=build/shared_model/bindings block.proto primitive.proto commands.proto queries.proto responses.proto endpoint.proto"

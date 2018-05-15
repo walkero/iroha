@@ -18,7 +18,7 @@ properties([parameters([
   booleanParam(defaultValue: false, description: '', name: 'MacOS'),
   booleanParam(defaultValue: true, description: '', name: 'WinSM'),
   booleanParam(defaultValue: false, description: 'Whether build docs or not', name: 'Doxygen'),
-  booleanParam(defaultValue: false, description: 'Whether build Java bindings', name: 'JavaBindings'),
+  booleanParam(defaultValue: true, description: 'Whether build Java bindings', name: 'JavaBindings'),
   choice(choices: 'Release\nDebug', description: 'Java Bindings Build Type', name: 'JBBuildType'),
   booleanParam(defaultValue: false, description: 'Whether build Python bindings', name: 'PythonBindings'),
   choice(choices: 'Release\nDebug', description: 'Python Bindings Build Type', name: 'PBBuildType'),
@@ -390,7 +390,7 @@ pipeline {
         beforeAgent true
         anyOf {
           expression { return params.PythonBindings }
-          expression { return params.JavaBindings }
+          //expression { return params.JavaBindings }
           expression { return params.AndroidBindings }
         }
       }
@@ -470,26 +470,28 @@ pipeline {
     }
     stage('Shared model win') {
       when {
+        beforeAgent true
         expression { return params.WinSM }
       }
       agent { label 'win' }
       steps {
         script {
-          def scmVars = checkout scm
-          sh """
-            env;
-            cmake -Hshared_model \
-                  -Bbuild \
-                  -DCMAKE_TOOLCHAIN_FILE=/c/Users/Administrator/Downloads/vcpkg-master/vcpkg-master/scripts/buildsystems/vcpkg.cmake \
-                  -G "NMake Makefiles";
-            cmake --build build;
-          """
+          def bindings = load ".jenkinsci/bindings.groovy"
+          bindings.doJavaBindingsWin(params.JBBuildType)
         }
       }
       post {
         cleanup {
-          //sh 'echo cleanup'
-          cleanWs()
+          sh 'echo cleanup'
+          // cleanWs()
+        }
+        success {
+          def artifacts = load ".jenkinsci/artifacts.groovy"
+          def commit = env.GIT_COMMIT
+          if (params.JavaBindings) {
+            javaBindingsFilePaths = [ '/tmp/${GIT_COMMIT}/bindings-artifact/java-bindings-*.zip' ]
+            artifacts.uploadArtifacts(javaBindingsFilePaths, '/iroha/bindings/java')
+          }
         }
       }
     }
