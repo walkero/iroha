@@ -83,8 +83,7 @@ def doPythonBindingsWin(buildType=Release) {
       -G "NMake Makefiles" \
       -DSUPPORT_PYTHON2=$supportPython2
   """
-  sh "cmake --build build --target python_tests"
-  sh "cd build; make -j${params.PARALLELISM} irohapy"
+  sh "cmake --build build --target irohapy"
   sh "protoc --proto_path=schema --python_out=build/shared_model/bindings block.proto primitive.proto commands.proto queries.proto responses.proto endpoint.proto"
   sh "${env.PBVersion} -m grpc_tools.protoc --proto_path=schema --python_out=build/shared_model/bindings --grpc_python_out=build/shared_model/bindings endpoint.proto yac.proto ordering.proto loader.proto"
   sh "zip -j $artifactsPath build/shared_model/bindings/*.py build/shared_model/bindings/*.so"
