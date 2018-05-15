@@ -19,7 +19,7 @@ namespace iroha {
      */
     inline bool signaturesSubset(
         const shared_model::interface::types::SignatureRangeType &signatures,
-        const std::vector<shared_model::crypto::PublicKey> &public_keys) {
+        const boost::any_range<shared_model::crypto::PublicKey, boost::forward_traversal_tag> &public_keys) {
       return std::all_of(
           signatures.begin(),
           signatures.end(),
